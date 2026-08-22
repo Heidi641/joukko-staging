@@ -6,14 +6,16 @@ export async function getMetrics(): Promise<Metrics> {
   const supabase = await createSupabaseServerClient();
   if (!supabase) return demoMetrics;
 
-  const [{ count: uniqueUsers }, { count: activeParticipations }] = await Promise.all([
+  const [{ count: uniqueUsers }, { count: activeParticipations }, { data: categoryCounts }] = await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
-    supabase.from("group_members").select("id", { count: "exact", head: true }).eq("status", "active")
+    supabase.from("group_members").select("id", { count: "exact", head: true }).eq("status", "active"),
+    supabase.from("category_participation_counts").select("participation_count")
   ]);
+  const publicParticipationCount = categoryCounts?.reduce((sum, category) => sum + Number(category.participation_count ?? 0), 0) ?? 0;
 
   return {
-    uniqueUsers: uniqueUsers ?? 0,
-    activeParticipations: activeParticipations ?? 0
+    uniqueUsers: uniqueUsers && uniqueUsers > 0 ? uniqueUsers : publicParticipationCount,
+    activeParticipations: activeParticipations && activeParticipations > 0 ? activeParticipations : publicParticipationCount
   };
 }
 
