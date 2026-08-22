@@ -1,5 +1,5 @@
 import type { Offer } from "@/lib/types";
-import { matchingTier } from "@/lib/matching";
+import { calculateTotalPrice, matchingTier } from "@/lib/matching";
 import { acceptOfferAction } from "@/lib/actions";
 
 export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; acceptedCount: number }) {
@@ -7,10 +7,10 @@ export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; ac
   const nextTier = offer.tiers
     .filter((tier) => tier.min_acceptances > acceptedCount)
     .sort((a, b) => a.min_acceptances - b.min_acceptances)[0] ?? null;
-  const currentPrice = currentTier ? currentTier.price + (offer.delivery_price ?? 0) : offer.total_price;
+  const currentPrice = currentTier ? calculateTotalPrice(currentTier.price, offer.mandatory_fees, offer.delivery_price ?? 0) : offer.total_price;
 
   return (
-    <article className="card offer-acceptance">
+    <div className="offer-acceptance">
       <span className="pill">Tarjousversio {offer.version}</span>
       <h3>Hyväksyt tämän tarjouksen</h3>
       <dl className="summary-list">
@@ -45,6 +45,6 @@ export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; ac
         </label>
         <button className="button" type="submit">Hyväksy tarjous</button>
       </form>
-    </article>
+    </div>
   );
 }

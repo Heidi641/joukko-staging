@@ -1,5 +1,9 @@
 import type { ConditionalCommitment, Offer, OfferAcceptance } from "./types";
 
+export function calculateTotalPrice(productPrice: number, mandatoryFees = 0, deliveryPrice = 0) {
+  return productPrice + mandatoryFees + deliveryPrice;
+}
+
 export function deliveredTotalPrice(offer: Pick<Offer, "price" | "delivery_price" | "total_price">) {
   return offer.total_price ?? offer.price + (offer.delivery_price ?? 0);
 }
@@ -12,7 +16,7 @@ export function matchingTier(offer: Offer, acceptedCount: number) {
 
 export function evaluateConditionalMatch(commitment: ConditionalCommitment, offer: Offer, acceptedCount: number) {
   const tier = matchingTier(offer, acceptedCount);
-  const totalPrice = tier ? tier.price + (offer.delivery_price ?? 0) : deliveredTotalPrice(offer);
+  const totalPrice = tier ? calculateTotalPrice(tier.price, offer.mandatory_fees, offer.delivery_price ?? 0) : deliveredTotalPrice(offer);
 
   if (offer.valid_until && new Date(offer.valid_until) < new Date()) {
     return "expired" as const;

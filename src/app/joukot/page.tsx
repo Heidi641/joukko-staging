@@ -20,7 +20,7 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
       <section className="page-title">
         <div>
           <h1>Joukot</h1>
-          <p>Aktiiviset kilpailutukset kortteina. Suodata kategorian, alueen, suosion ja tarjousten mukaan.</p>
+          <p>Aktiiviset ostotoiveet kortteina. Suodata kategorian, alueen, suosion ja tarjousten mukaan.</p>
         </div>
       </section>
 
@@ -44,9 +44,10 @@ export default async function GroupsPage({ searchParams }: { searchParams: Promi
       </form>
 
       <section className="grid">
-        {filtered.map((group) => <GroupCard group={group} key={group.id} />)}
+        {filtered.slice(0, 30).map((group) => <GroupCard group={group} key={group.id} />)}
         {filtered.length === 0 && <div className="empty">Ei vielä sopivia Joukkoja. Perusta uusi Joukko.</div>}
       </section>
+      {filtered.length > 30 && <p className="muted">Näytetään 30 ensimmäistä. Tarkenna hakua tai suodatinta nähdäksesi lisää.</p>}
     </>
   );
 }

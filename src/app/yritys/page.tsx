@@ -47,7 +47,7 @@ export default async function CompanyPage() {
       <section className="columns">
         <form className="panel" action={createOfferAction}>
           <h2>Tee tarjous kysyntään</h2>
-          <p className="muted">Kun tarjous julkaistaan ja kuluttajat alkavat sitoutua siihen, olennaiset kentät lukitaan. Muutokset tehdään uutena tarjousversiona.</p>
+          <p className="muted">Tarjouksen julkaisu vaatii verified-yrityksen. Kun tarjous julkaistaan ja kuluttajat alkavat sitoutua siihen, olennaiset kentät lukitaan.</p>
           <label>Joukko<select name="group_id">{groups.map((group) => <option value={group.id} key={group.id}>{group.name} · {group.member_count.toLocaleString("fi-FI")} kiinnostunutta · {group.group_type}</option>)}</select></label>
           <label>Tarjottava tuote tai palvelu<input name="product_or_service" required placeholder="Täsmällinen tuote/palvelu" /></label>
           <div className="grid two compact">
@@ -77,13 +77,12 @@ export default async function CompanyPage() {
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
           <button className="button" type="submit">Julkaise staging-tarjous</button>
-          <button className="button secondary" type="button">Ilmoita ongelmasta</button>
         </form>
 
         <aside className="panel">
           <h2>Yrityksen varmennus</h2>
           <div className="facts">
-            <div><dt>Tila</dt><dd>unverified</dd></div>
+            <div><dt>Tila</dt><dd>verified vaaditaan</dd></div>
             <div><dt>Seuraava</dt><dd>pending_verification</dd></div>
             <div><dt>Julkaisu</dt><dd>verified</dd></div>
           </div>

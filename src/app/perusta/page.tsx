@@ -45,7 +45,6 @@ export default async function CreateGroupPage({ searchParams }: { searchParams: 
           <label>Mallikoodi<input name="model_code" placeholder="Tarkka mallikoodi" /></label>
           <label>Alue<input name="area" placeholder="Suomi" /></label>
         </div>
-        <label>Tarvittava määrä tai tavoite<input name="target_count" type="number" min="1" placeholder="Esim. 500" /></label>
         <input name="detail_note" type="hidden" value="Asiakas kertoo ostotoiveen. Myyjä määrittelee tarjouksen, hinnan ja ehdot." />
         <div className="notice">Uusi Joukko menee stagingissa tilaan <strong>pending</strong>. Tämä ei ole ostositoumus eikä tarjouspyyntö yrityksen puolesta.</div>
         <button className="button" type="submit">Perusta uusi Joukko</button>

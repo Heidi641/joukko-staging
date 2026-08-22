@@ -120,7 +120,7 @@ export async function createGroupAction(formData: FormData) {
       name,
       slug,
       want_summary: name,
-      description: value(formData, "description") || `TESTIDATA: ihmiset haluavat ${name}.`,
+      description: value(formData, "description") || `Ihmiset haluavat ${name}.`,
       detail_note: value(formData, "detail_note") || null,
       terms: [value(formData, "detail_note") || "Tarve tarkentuu Joukon kasvaessa"],
       area: value(formData, "area") || "Suomi",
@@ -139,10 +139,27 @@ export async function createGroupAction(formData: FormData) {
 
 export async function createOfferAction(formData: FormData) {
   const { supabase, user } = await currentUser();
+  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
+  if (profile?.role !== "company") redirect("/yritys?virhe=rooli");
+
   const { data: company } = await supabase.from("companies").select("id, name, business_id, contact_email, email, customer_service_contact, home_country, verification_status").eq("owner_id", user.id).limit(1).single();
   if (!company) redirect("/yritys?virhe=yritys");
+  if (company.verification_status !== "verified") redirect("/yritys?virhe=varmennus");
 
   const groupId = value(formData, "group_id");
+  const { data: group } = await supabase.from("groups").select("id, group_type, brand, model_code").eq("id", groupId).single();
+  if (!group) redirect("/yritys?virhe=joukko");
+
+  if (group.group_type === "exact") {
+    const exactBrand = String(group.brand ?? "").trim().toLowerCase();
+    const exactModelCode = String(group.model_code ?? "").trim().toLowerCase();
+    const offeredBrand = value(formData, "brand").toLowerCase();
+    const offeredModelCode = value(formData, "model_code").toLowerCase();
+    if ((exactBrand && offeredBrand !== exactBrand) || (exactModelCode && offeredModelCode !== exactModelCode)) {
+      redirect("/yritys?virhe=exact");
+    }
+  }
+
   const { count } = await supabase
     .from("offers")
     .select("id", { count: "exact", head: true })

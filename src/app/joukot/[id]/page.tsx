@@ -39,7 +39,6 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
           <div className="actions">
             <a className="button" href="#liity">Liity Joukkoon</a>
             <ShareButton title={group.name} count={group.member_count} />
-            <button className="button secondary" type="button">Ilmoita ongelmasta</button>
           </div>
         </aside>
       </section>
@@ -102,11 +101,16 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
             <p className="muted">{(offer.accepted_count ?? 0).toLocaleString("fi-FI")} hyväksynyt tämän tarjouksen · säästöarvio {offer.estimated_saving ?? 0} € · vähintään {offer.minimum_participants} hyväksyjää</p>
             <p className="muted">Osuvuus: {offer.requirement_match} · kategoria: {offer.category_match}</p>
             <p>{offer.terms}</p>
-            <button className="button secondary" type="button">Ilmoita ongelmasta</button>
             <OfferAcceptanceCard offer={offer} acceptedCount={group.committed_count} />
           </article>
         ))}
-        {offers.length === 0 && <div className="empty">Ei tarjouksia vielä.</div>}
+        {offers.length === 0 && (
+          <div className="empty">
+            <h2>Ei tarjouksia vielä</h2>
+            <p>Tämä Joukko odottaa yrityksiä. Kutsu lisää ihmisiä mukaan - suurempi kysyntä voi houkutella paremman tarjouksen.</p>
+            <ShareButton title={group.name} count={group.member_count} />
+          </div>
+        )}
       </section>
     </>
   );

@@ -4,8 +4,14 @@ import { isStaging, stagingLabel } from "@/lib/staging";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "JOUKKO",
-  description: "Kuluttajien yhteisen ostovoiman markkinapaikka"
+  title: "JOUKKO - yhteinen ostovoima",
+  description: "JOUKKO kokoaa kuluttajien ostotoiveet ja näyttää yritysten tarjoukset vertailtavaksi.",
+  openGraph: {
+    title: "JOUKKO - yhteinen ostovoima",
+    description: "Kerro mitä haluat. Muut liittyvät mukaan. Yritykset tarjoavat.",
+    type: "website"
+  },
+  robots: isStaging ? { index: false, follow: false } : { index: true, follow: true }
 };
 
 const nav = [
@@ -14,8 +20,7 @@ const nav = [
   ["Perusta Joukko", "/perusta"],
   ["Yrityksille", "/yritys"],
   ["Minun", "/minun"],
-  ["Kirjaudu", "/kirjaudu"],
-  ["Admin", "/admin"]
+  ["Kirjaudu", "/kirjaudu"]
 ];
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
