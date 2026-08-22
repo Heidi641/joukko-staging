@@ -194,6 +194,8 @@ textarea { min-height: 130px; resize: vertical; }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
 .tabs button { border: 1px solid var(--line); border-radius: 8px; padding: 9px 12px; background: #fff; font-weight: 850; }
 .warning { color: var(--warning); font-weight: 760; }
+.success { color: var(--green-dark); font-weight: 850; }
+.demo-action { display: grid; gap: 8px; }
 .test-account {
   display: grid;
   gap: 4px;

@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { ProgressBar } from "@/components/progress";
 import { ShareButton } from "@/components/share-button";
+import { DemoAction } from "@/components/demo-action";
 import { OfferAcceptanceCard } from "@/components/offer-acceptance-card";
 import { getGroup, getOffersForGroup } from "@/lib/data";
 
@@ -59,7 +60,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
           <label>Päättymispäivä, jos määräaikainen<input type="date" /></label>
           <div className="actions">
             <button className="button secondary" type="button">Seuraan</button>
-            <button className="button" type="button">Olen mukana</button>
+            <DemoAction label="Olen mukana" doneLabel="Liityit staging-demossa tähän Joukkoon. Tämä ei ole ostositoumus." storageKey={`joukko-demo-joined-${group.id}`} />
           </div>
           <hr />
           <h3>Olet sitoutumassa näihin ehtoihin</h3>
@@ -68,7 +69,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
           <label>Sopimus enintään kuukausina<input type="number" min="1" placeholder="12" /></label>
           <label>Vähimmäissäästö luotettavasta vertailuhinnasta<input type="number" min="0" step="0.01" placeholder="50" /></label>
           <p className="muted">Tämä tallennetaan myöhemmin muuttumattomana hyväksyttynä ehtoversiona ja siihen sidottuna tarjousversiona.</p>
-          <button className="button" type="button">Sitoudun ehdoilla demo</button>
+          <DemoAction label="Sitoudun ehdoilla demo" doneLabel="Ehdollinen demo-sitoutuminen tallennettiin vain tähän selaimeen." storageKey={`joukko-demo-commitment-${group.id}`} />
         </form>
       </section>
 
@@ -82,7 +83,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
             <p>{offer.description}</p>
             <p className="muted">Säästöarvio {offer.estimated_saving ?? 0} € · vähintään {offer.minimum_participants} hyväksyjää</p>
             <p>{offer.terms}</p>
-            <div className="actions"><button className="button" type="button">Hyväksy demo</button><button className="button secondary" type="button">Hylkää</button></div>
+            <div className="actions"><DemoAction label="Hyväksy demo" doneLabel="Tarjous hyväksyttiin staging-demossa. Halvempi porras voi soveltua automaattisesti." storageKey={`joukko-demo-accepted-${offer.id}`} /><button className="button secondary" type="button">Hylkää</button></div>
             <button className="button secondary" type="button">Ilmoita ongelmasta</button>
             <OfferAcceptanceCard offer={offer} acceptedCount={group.committed_count} />
           </article>

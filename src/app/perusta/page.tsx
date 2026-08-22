@@ -1,4 +1,5 @@
 import { GroupCard } from "@/components/group-card";
+import { DemoAction } from "@/components/demo-action";
 import { findSimilarGroups, getCategories } from "@/lib/data";
 
 export default async function CreateGroupPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
@@ -38,7 +39,7 @@ export default async function CreateGroupPage({ searchParams }: { searchParams: 
         <label>Ajankohta<input placeholder="Heti, päivämäärä tai aikaväli" /></label>
         <label>Tavoitemäärä<input type="number" min="1" placeholder="Esim. 500" /></label>
         <div className="notice">Uusi käyttäjän perustama Joukko menee tilaan <strong>pending</strong>. Kun muita on liittynyt, olennaisia ehtoja ei saa muuttaa yksipuolisesti. Muutos vaatii uuden hyväksynnän tai uuden Joukon.</div>
-        <button className="button" type="button">Lähetä tarkistukseen</button>
+        <DemoAction label="Lähetä tarkistukseen" doneLabel="Demo-Joukko lähetettiin staging-tarkistukseen." storageKey="joukko-demo-created-group" />
       </form>
     </>
   );

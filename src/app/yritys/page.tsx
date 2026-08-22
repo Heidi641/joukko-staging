@@ -1,4 +1,5 @@
 import { GroupCard } from "@/components/group-card";
+import { DemoAction } from "@/components/demo-action";
 import { getCategories, getGroups } from "@/lib/data";
 
 export default async function CompanyPage() {
@@ -56,7 +57,7 @@ export default async function CompanyPage() {
           <label>Muut ehdot<textarea></textarea></label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
-          <button className="button" type="button">Luo tarjousversio ja lähetä tarkistukseen</button>
+          <DemoAction label="Luo tarjousversio ja lähetä tarkistukseen" doneLabel="Demo-tarjousversio tallennettiin stagingiin ilman henkilötietoja." storageKey="joukko-demo-company-offer" />
           <button className="button secondary" type="button">Ilmoita ongelmasta</button>
         </form>
 

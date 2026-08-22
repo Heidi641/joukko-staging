@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { DemoLogin } from "@/components/demo-login";
 import { testAccounts } from "@/lib/staging";
 
 export default function LoginPage() {
@@ -16,6 +17,7 @@ export default function LoginPage() {
         <button className="button" type="button">Kirjaudu demo</button>
         <p className="muted">Ei tiliä? <Link href="/rekisteroidy">Rekisteröidy</Link></p>
       </form>
+      <DemoLogin />
       <section className="section-head">
         <div>
           <h2>Staging-testitunnukset</h2>
