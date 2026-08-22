@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: joukko-staging
+    runtime: node
+    plan: free
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm run build
+    startCommand: pnpm run start
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NEXT_PUBLIC_APP_ENV
+        value: staging
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://joukko-staging.onrender.com
+      - key: AI_ENABLED
+        value: false
+      - key: AI_PROVIDER
+        value: mock
+      - key: AI_MAX_COST_PER_DAY
+        value: 0
