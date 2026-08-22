@@ -1,27 +1,39 @@
 import Link from "next/link";
-import { DemoLogin } from "@/components/demo-login";
+import { signInAction, signOutAction } from "@/lib/actions";
+import { createSupabaseServerClient } from "@/lib/supabase";
 import { testAccounts } from "@/lib/staging";
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const params = await searchParams;
+  const supabase = await createSupabaseServerClient();
+  const { data } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+
   return (
     <>
       <section className="page-title">
         <div>
           <h1>Kirjaudu</h1>
-          <p>Supabase Auth kytketään tähän. MVP pitää roolit selkeinä: kuluttaja, yritys ja admin.</p>
+          <p>Staging käyttää Supabase Authia. Roolit ovat kuluttaja, yritys ja admin.</p>
         </div>
       </section>
-      <form className="panel wizard">
-        <label>Sähköposti<input type="email" required placeholder="sina@example.com" /></label>
-        <label>Salasana<input type="password" required /></label>
-        <button className="button" type="button">Kirjaudu demo</button>
-        <p className="muted">Ei tiliä? <Link href="/rekisteroidy">Rekisteröidy</Link></p>
-      </form>
-      <DemoLogin />
+      {params.virhe && <div className="notice warning">Kirjautuminen epäonnistui. Tarkista testitunnus.</div>}
+      {data.user ? (
+        <form className="panel wizard" action={signOutAction}>
+          <p>Kirjautuneena: <strong>{data.user.email}</strong></p>
+          <button className="button secondary" type="submit">Kirjaudu ulos</button>
+        </form>
+      ) : (
+        <form className="panel wizard" action={signInAction}>
+          <label>Sähköposti<input name="email" type="email" required placeholder="sina@example.com" /></label>
+          <label>Salasana<input name="password" type="password" required /></label>
+          <button className="button" type="submit">Kirjaudu</button>
+          <p className="muted">Ei tiliä? <Link href="/rekisteroidy">Rekisteröidy</Link></p>
+        </form>
+      )}
       <section className="section-head">
         <div>
           <h2>Staging-testitunnukset</h2>
-          <p className="muted">Nämä ovat vain testiympäristöä varten. Kirjautuminen on demotilassa eikä käytä oikeita asiakastietoja.</p>
+          <p className="muted">Nämä ovat vain testiympäristöä varten. Salasana on sama kaikille testirooleille.</p>
         </div>
       </section>
       <section className="grid">

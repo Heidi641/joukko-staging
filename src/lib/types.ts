@@ -1,5 +1,6 @@
 export type Role = "consumer" | "company" | "admin";
 export type GroupStatus = "draft" | "pending" | "active" | "hidden" | "paused";
+export type GroupType = "open" | "exact";
 export type ContractStatus = "can_switch_now" | "fixed_term" | "open_ended" | "unknown";
 export type EngagementLevel = "following" | "joined" | "conditional_commitment";
 export type MatchStatus = "conditional_match" | "threshold_reached" | "confirmed" | "completed" | "expired" | "cancelled" | "failed_threshold";
@@ -29,6 +30,12 @@ export type Group = {
   category_slug: string;
   category_icon: string;
   description: string;
+  group_type?: GroupType;
+  want_summary?: string | null;
+  detail_note?: string | null;
+  brand?: string | null;
+  model?: string | null;
+  model_code?: string | null;
   terms: string[];
   area: string | null;
   target_count: number | null;
@@ -37,6 +44,8 @@ export type Group = {
   committed_count: number;
   ready_now_count: number;
   offer_count: number;
+  new_members_24h?: number;
+  new_members_7d?: number;
   status: GroupStatus;
   featured: boolean;
   country_code: "FI";
@@ -56,6 +65,8 @@ export type OfferTier = {
 export type Offer = {
   id: string;
   group_id: string;
+  company_id?: string;
+  offer_version_id?: string;
   version: number;
   company_name: string;
   company_verification_status: CompanyVerificationStatus;
@@ -64,6 +75,14 @@ export type Offer = {
   company_country: string;
   title: string;
   product_or_service: string;
+  brand?: string | null;
+  model?: string | null;
+  model_code?: string | null;
+  product_image_url?: string | null;
+  availability?: string | null;
+  requirement_match?: string;
+  category_match?: string;
+  comparison_fields?: Record<string, string | number | boolean | null>;
   description: string;
   price: number;
   mandatory_fees: number;
@@ -86,6 +105,7 @@ export type Offer = {
   starts_at: string | null;
   valid_until: string;
   tiers: OfferTier[];
+  accepted_count?: number;
   locked_at: string | null;
   published_at: string | null;
   response_status?: "pending" | "accepted" | "rejected";

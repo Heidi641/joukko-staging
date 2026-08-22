@@ -1,5 +1,6 @@
 import type { Offer } from "@/lib/types";
 import { matchingTier } from "@/lib/matching";
+import { acceptOfferAction } from "@/lib/actions";
 
 export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; acceptedCount: number }) {
   const currentTier = matchingTier(offer, acceptedCount) ?? offer.tiers[0] ?? null;
@@ -29,11 +30,21 @@ export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; ac
         <p>{offer.terms_text ?? offer.terms_url ?? offer.terms_document_reference ?? offer.terms}</p>
       </details>
       <p className="muted">JOUKKO toimii alustana ja kysynnän kokoajana. Myyjä vastaa omasta tarjouksestaan, myyntiehdoistaan ja toimituksesta.</p>
-      <label className="check">
-        <input type="checkbox" />
-        Hyväksyn, että jos JOUKKO kasvaa ja hinta laskee samoilla tai paremmilla ehdoilla, alempi hinta voidaan soveltaa automaattisesti ilman uutta hyväksyntää.
-      </label>
-      <button className="button" type="button">Hyväksy tarjous</button>
+      <form action={acceptOfferAction}>
+        <input type="hidden" name="group_id" value={offer.group_id} />
+        <input type="hidden" name="offer_id" value={offer.id} />
+        <input type="hidden" name="offer_version_id" value={offer.offer_version_id} />
+        <input type="hidden" name="company_id" value={offer.company_id} />
+        <input type="hidden" name="accepted_price" value={currentPrice} />
+        <input type="hidden" name="current_price" value={currentPrice} />
+        <input type="hidden" name="terms_version" value={offer.terms_version} />
+        <input type="hidden" name="product_or_service" value={offer.product_or_service} />
+        <label className="check">
+          <input type="checkbox" name="allow_auto_apply" defaultChecked />
+          Hyväksyn, että jos JOUKKO kasvaa ja hinta laskee samoilla tai paremmilla ehdoilla, alempi hinta voidaan soveltaa automaattisesti ilman uutta hyväksyntää.
+        </label>
+        <button className="button" type="submit">Hyväksy tarjous</button>
+      </form>
     </article>
   );
 }

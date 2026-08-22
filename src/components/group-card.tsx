@@ -11,10 +11,11 @@ export function GroupCard({ group }: { group: Group }) {
       </div>
       <h3>{group.name}</h3>
       <p>{group.description}</p>
-      <strong className="big">{group.member_count.toLocaleString("fi-FI")} mukana</strong>
+      <strong className="big">{group.member_count.toLocaleString("fi-FI")} kiinnostunutta</strong>
+      <p className="muted">{group.group_type === "exact" ? "Tarkka Joukko" : "Avoin Joukko"}{group.model_code ? ` · ${group.model_code}` : ""}</p>
       <ProgressBar count={group.member_count} target={group.target_count} />
       <p className="muted">
-        {group.committed_count.toLocaleString("fi-FI")} ehdollisesti sitoutunut · {group.ready_now_count.toLocaleString("fi-FI")} voi toteuttaa nyt
+        {group.follower_count.toLocaleString("fi-FI")} seuraa tarjouksia · {group.committed_count.toLocaleString("fi-FI")} hyväksynyt tarjouksen
       </p>
       <p className="muted">{group.area ?? "Valtakunnallinen"} · {group.offer_count} yritystarjousta</p>
       <Link className="button secondary" href={`/joukot/${group.id}`}>Avaa Joukko</Link>

@@ -1,22 +1,39 @@
+import { redirect } from "next/navigation";
+import { approveGroupAction } from "@/lib/actions";
 import { getCategories, getGroups } from "@/lib/data";
+import { createSupabaseServerClient } from "@/lib/supabase";
 
 export default async function AdminPage() {
+  const supabase = await createSupabaseServerClient();
+  const { data: auth } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+  if (!auth.user) redirect("/kirjaudu");
+
+  const { data: profile } = supabase ? await supabase.from("profiles").select("role").eq("id", auth.user.id).single() : { data: null };
+  if (profile?.role !== "admin") {
+    return <section className="page-title"><div><h1>Ei oikeutta</h1><p>Admin-näkymä vaatii admin-roolin ja RLS-suojauksen.</p></div></section>;
+  }
+
   const [groups, categories] = await Promise.all([getGroups(), getCategories()]);
+  const [{ count: profileCount }, { count: companyCount }, { count: auditCount }] = supabase ? await Promise.all([
+    supabase.from("profiles").select("id", { count: "exact", head: true }),
+    supabase.from("companies").select("id", { count: "exact", head: true }),
+    supabase.from("audit_events").select("id", { count: "exact", head: true })
+  ]) : [{ count: 0 }, { count: 0 }, { count: 0 }];
 
   return (
     <>
       <section className="page-title">
         <div>
           <h1>Admin</h1>
-          <p>Adminin oikeudet pitää suojata Supabase RLS:llä ja palvelinpuolen roolitarkistuksella. Tämä MVP näyttää hallintamallin ilman kovakoodattuja avaimia.</p>
+          <p>Admin-oikeus tarkistetaan palvelimella ja Supabase RLS:llä. Tämä on staging, ei tuotanto.</p>
         </div>
       </section>
       <section className="grid">
-        <article className="card"><h3>Käyttäjät</h3><strong className="big">0</strong><p className="muted">profiles-taulu</p></article>
-        <article className="card"><h3>Yritykset</h3><strong className="big">0</strong><p className="muted">companies-taulu</p></article>
+        <article className="card"><h3>Käyttäjät</h3><strong className="big">{profileCount ?? 0}</strong><p className="muted">profiles-taulu</p></article>
+        <article className="card"><h3>Yritykset</h3><strong className="big">{companyCount ?? 0}</strong><p className="muted">companies-taulu</p></article>
         <article className="card"><h3>Kategoriat</h3><strong className="big">{categories.length}</strong><p className="muted">Lisättävissä tietokannasta</p></article>
         <article className="card"><h3>Raportit</h3><strong className="big">0</strong><p className="muted">Joukot, tarjoukset ja yritykset</p></article>
-        <article className="card"><h3>Audit trail</h3><strong className="big">0</strong><p className="muted">Tarjousversiot, sitoumukset, perumiset</p></article>
+        <article className="card"><h3>Audit trail</h3><strong className="big">{auditCount ?? 0}</strong><p className="muted">Tarjousversiot, sitoumukset, perumiset</p></article>
         <article className="card"><h3>Säännellyt kategoriat</h3><strong className="big">LEGAL</strong><p className="warning">JURIDINEN TARKISTUS VAADITAAN ENNEN AKTIVOINTIA</p></article>
         <article className="card"><h3>AI</h3><strong className="big">OFF</strong><p className="muted">Provider mock · malli mock-v1 · kustannusraja 0 €</p></article>
         <article className="card"><h3>AI-liput</h3><strong className="big">0</strong><p className="muted">Tarkistusta vaativat tarjoukset ja nopeasti kasvavat Joukot</p></article>
@@ -30,7 +47,10 @@ export default async function AdminPage() {
             <h3>{group.name}</h3>
             <p>{group.description}</p>
             <div className="actions">
-              <button className="button" type="button">Hyväksy</button>
+              <form action={approveGroupAction}>
+                <input type="hidden" name="group_id" value={group.id} />
+                <button className="button" type="submit">Hyväksy</button>
+              </form>
               <button className="button secondary" type="button">Piilota</button>
               <button className="button secondary" type="button">Nosta etusivulle</button>
             </div>

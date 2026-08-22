@@ -22,9 +22,10 @@ export default async function OffersPage() {
             <h3>{offer.company_name}: {offer.title}</h3>
             <strong className="big">{offer.total_price.toLocaleString("fi-FI")} € kokonaishinta</strong>
             <p>{offer.description}</p>
+            <p className="muted">{offer.brand ?? "Myyjän tuote"} {offer.model ?? ""} · {offer.accepted_count ?? 0} hyväksyntää</p>
             <p className="muted">Toimitus {offer.delivery_price ?? 0} € · säästö {offer.estimated_saving ?? 0} € · vähintään {offer.minimum_participants}</p>
             <p>{offer.terms}</p>
-            <div className="actions"><button className="button" type="button">Hyväksy demo</button><button className="button secondary" type="button">Hylkää</button></div>
+            <div className="actions"><a className="button" href={`/joukot/${offer.group_id}`}>Katso tarjous</a></div>
           </article>
         ))}
         {offers.length === 0 && <div className="empty">Tarjouksia ei ole vielä.</div>}

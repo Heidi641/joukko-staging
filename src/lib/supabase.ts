@@ -1,12 +1,35 @@
-import { createClient } from "@supabase/supabase-js";
+import { createBrowserClient, createServerClient } from "@supabase/ssr";
+import { cookies } from "next/headers";
+import type { CookieOptions } from "@supabase/ssr";
 
-export function createSupabaseClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !anonKey) {
-    return null;
-  }
+export const hasSupabaseEnv = Boolean(supabaseUrl && supabaseAnonKey);
 
-  return createClient(url, anonKey);
+export function createSupabaseBrowserClient() {
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+  return createBrowserClient(supabaseUrl, supabaseAnonKey);
+}
+
+export async function createSupabaseServerClient() {
+  if (!supabaseUrl || !supabaseAnonKey) return null;
+  const cookieStore = await cookies();
+
+  return createServerClient(supabaseUrl, supabaseAnonKey, {
+    cookies: {
+      getAll() {
+        return cookieStore.getAll();
+      },
+      setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        } catch {
+          // Server Components cannot set cookies; middleware refreshes sessions.
+        }
+      }
+    }
+  });
 }

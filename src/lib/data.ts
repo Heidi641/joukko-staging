@@ -1,10 +1,9 @@
 import { categories as demoCategories, groups as demoGroups, metrics as demoMetrics, offers as demoOffers } from "./demo-data";
-import { createSupabaseClient } from "./supabase";
+import { createSupabaseServerClient } from "./supabase";
 import type { Category, Group, Metrics, Offer } from "./types";
 
-const supabase = createSupabaseClient();
-
 export async function getMetrics(): Promise<Metrics> {
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return demoMetrics;
 
   const [{ count: uniqueUsers }, { count: activeParticipations }] = await Promise.all([
@@ -19,6 +18,7 @@ export async function getMetrics(): Promise<Metrics> {
 }
 
 export async function getCategories(): Promise<Category[]> {
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return demoCategories;
 
   const { data, error } = await supabase
@@ -32,6 +32,7 @@ export async function getCategories(): Promise<Category[]> {
 }
 
 export async function getGroups(): Promise<Group[]> {
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return demoGroups;
 
   const { data, error } = await supabase
@@ -51,6 +52,7 @@ export async function getGroup(id: string): Promise<Group | null> {
 }
 
 export async function getOffersForGroup(groupId: string): Promise<Offer[]> {
+  const supabase = await createSupabaseServerClient();
   if (!supabase) return demoOffers.filter((offer) => offer.group_id === groupId);
 
   const { data, error } = await supabase

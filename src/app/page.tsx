@@ -1,20 +1,28 @@
 import Link from "next/link";
-import { getCategories, getMetrics } from "@/lib/data";
+import { GroupCard } from "@/components/group-card";
+import { findSimilarGroups, getCategories, getMetrics } from "@/lib/data";
 
-export default async function HomePage() {
-  const [metrics, categories] = await Promise.all([getMetrics(), getCategories()]);
+export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+  const params = await searchParams;
+  const query = params.q ?? "";
+  const [metrics, categories, matches] = await Promise.all([getMetrics(), getCategories(), findSimilarGroups(query)]);
 
   return (
     <>
       <section className="hero">
         <div>
           <p className="kicker">JOUKKO</p>
-          <h1>Yksin olet yksi asiakas. Yhdessä olemme ostovoimaa.</h1>
-          <p>Kerro mitä haluat halvemmalla. Liity muiden samaa haluavien joukkoon. Kun ostajia kertyy, yritykset kilpailevat teistä.</p>
-          <div className="actions">
-            <Link className="button" href="/joukot">Liity Joukkoon</Link>
-            <Link className="button secondary" href="/perusta">Perusta Joukko</Link>
-          </div>
+          <h1>Mitä haluaisit saada halvemmalla?</h1>
+          <p>Ihmiset kertovat mitä haluavat. Samaa haluavat kerääntyvät Joukoksi. Yritykset näkevät kysynnän ja tekevät omat tarjouksensa.</p>
+          <form className="search-hero" action="/">
+            <input name="q" defaultValue={query} placeholder='Esim. 65" televisio, hotelliviikonloppu Helsingissä, sähkösopimus' />
+            <button className="button" type="submit">Etsi Joukko</button>
+          </form>
+          {query && matches.length === 0 && (
+            <div className="actions">
+              <Link className="button" href={`/perusta?nimi=${encodeURIComponent(query)}`}>Perusta uusi Joukko</Link>
+            </div>
+          )}
         </div>
         <aside className="metric">
           <div className="metric-box">
@@ -27,6 +35,20 @@ export default async function HomePage() {
           </div>
         </aside>
       </section>
+
+      {query && matches.length > 0 && (
+        <>
+          <section className="section-head">
+            <div>
+              <h2>Sopivia Joukkoja löytyi</h2>
+              <p className="muted">Valitse olemassa oleva Joukko uuden perustamisen sijaan, jos tarve on sama.</p>
+            </div>
+          </section>
+          <section className="grid">
+            {matches.map((group) => <GroupCard group={group} key={group.id} />)}
+          </section>
+        </>
+      )}
 
       <section className="section-head">
         <div>

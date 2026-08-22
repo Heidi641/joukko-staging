@@ -1,5 +1,5 @@
 import { GroupCard } from "@/components/group-card";
-import { DemoAction } from "@/components/demo-action";
+import { createOfferAction } from "@/lib/actions";
 import { getCategories, getGroups } from "@/lib/data";
 
 export default async function CompanyPage() {
@@ -18,46 +18,65 @@ export default async function CompanyPage() {
         <input placeholder="Hae Joukkoja" />
         <select><option>Kaikki kategoriat</option>{categories.map((category) => <option key={category.id}>{category.name}</option>)}</select>
         <select><option>Koko Suomi</option><option>Alueellinen</option></select>
-        <select><option>Eniten osallistujia</option><option>Tarjouksia saatavilla</option></select>
+        <select><option>Eniten kiinnostuneita</option><option>Kasvavat Joukot</option><option>Joukot ilman tarjousta</option></select>
       </form>
 
+      <section className="section-head">
+        <div>
+          <h2>Joukot, joihin kaivataan tarjouksia</h2>
+          <p className="muted">Yritys näkee aggregoidun kysynnän. Yksittäisiä henkilötietoja ei näytetä.</p>
+        </div>
+      </section>
       <section className="grid">
-        {groups.map((group) => <GroupCard group={group} key={group.id} />)}
+        {groups.filter((group) => group.offer_count === 0).slice(0, 6).map((group) => <GroupCard group={group} key={group.id} />)}
+      </section>
+
+      <section className="section-head"><h2>Nopeasti kasvavat Joukot</h2></section>
+      <section className="grid">
+        {groups.slice().sort((a, b) => (b.new_members_7d ?? 0) - (a.new_members_7d ?? 0)).slice(0, 6).map((group) => (
+          <article className="card" key={group.id}>
+            <span className="pill">{group.category_name}</span>
+            <h3>{group.name}</h3>
+            <strong className="big">{group.member_count.toLocaleString("fi-FI")} kiinnostunutta</strong>
+            <p className="muted">{(group.new_members_24h ?? 0).toLocaleString("fi-FI")} uutta / 24 h · {(group.new_members_7d ?? 0).toLocaleString("fi-FI")} uutta / 7 vrk</p>
+            <p>{group.group_type === "exact" ? "Tarkka tarve" : "Avoin tarve, sopivat eri merkit ja mallit"}</p>
+          </article>
+        ))}
       </section>
 
       <section className="columns">
-        <form className="panel">
-          <h2>Tarkista tarjous</h2>
+        <form className="panel" action={createOfferAction}>
+          <h2>Tee tarjous kysyntään</h2>
           <p className="muted">Kun tarjous julkaistaan ja kuluttajat alkavat sitoutua siihen, olennaiset kentät lukitaan. Muutokset tehdään uutena tarjousversiona.</p>
-          <label>Joukko<select>{groups.map((group) => <option key={group.id}>{group.name}</option>)}</select></label>
-          <label>Tarjottava tuote tai palvelu<input placeholder="Täsmällinen tuote/palvelu, ei yleinen markkinointinimi" /></label>
-          <label>Tarjousnimi<input placeholder="Esim. JOUKKO-sähkö 12 kk" /></label>
-          <label>Kuvaus<textarea placeholder="Mitä tarjous sisältää?"></textarea></label>
-          <label>Hinta<input type="number" min="0" step="0.01" placeholder="24.90" /></label>
-          <label>Pakolliset lisäkulut<input type="number" min="0" step="0.01" placeholder="0" /></label>
-          <label>Normaalihinta<input type="number" min="0" step="0.01" placeholder="29.90" /></label>
-          <label>Arvioitu säästö<input type="number" min="0" step="0.01" placeholder="60" /></label>
-          <label>Vähimmäisosallistujamäärä<input type="number" min="1" placeholder="500" /></label>
-          <label>Toimituskulut<input type="number" min="0" step="0.01" placeholder="0" /></label>
-          <label>Toimitustapa<input placeholder="Toimitettuna, nouto, sähköinen" /></label>
-          <label>Toimitusaika<input placeholder="Esim. 5-10 arkipäivää" /></label>
-          <label>Porrastetut hinnat<textarea placeholder={"500 hyväksyjää = 29,90 €\n1000 hyväksyjää = 27,90 €"}></textarea></label>
-          <label>ALV-status<input placeholder="Sisältää ALV:n / ALV 0 % / muu" /></label>
-          <label>Sopimuskausi tarvittaessa<input placeholder="Esim. 12 kk" /></label>
-          <label>Takuu<input placeholder="Esim. 24 kk" /></label>
-          <label>Palautusehdot<textarea placeholder="Myyjän palautusehdot"></textarea></label>
-          <label>Peruutusehdot<textarea placeholder="Myyjän peruutusehdot"></textarea></label>
-          <label>Tarjous alkaa<input type="datetime-local" /></label>
-          <label>Tarjous päättyy<input type="date" /></label>
-          <label>Myyjän ehtojen tyyppi<select><option>Teksti</option><option>Linkki</option><option>Dokumenttiviite</option></select></label>
-          <label>Myyjän myyntiehdot tekstinä<textarea placeholder="Yritys kirjoittaa omat ehtonsa. JOUKKO ei generoi ehtoja myyjän puolesta."></textarea></label>
-          <label>Linkki myyjän ehtoihin<input type="url" placeholder="https://..." /></label>
-          <label>Ehtodokumentin viite<input placeholder="storage://seller-terms/..." /></label>
-          <label>Ehtoversio<input placeholder="seller-terms-v1" /></label>
-          <label>Muut ehdot<textarea></textarea></label>
+          <label>Joukko<select name="group_id">{groups.map((group) => <option value={group.id} key={group.id}>{group.name} · {group.member_count.toLocaleString("fi-FI")} kiinnostunutta · {group.group_type}</option>)}</select></label>
+          <label>Tarjottava tuote tai palvelu<input name="product_or_service" required placeholder="Täsmällinen tuote/palvelu" /></label>
+          <div className="grid two compact">
+            <label>Merkki<input name="brand" placeholder="Samsung, LG, TCL..." /></label>
+            <label>Malli<input name="model" placeholder="OLED 65..." /></label>
+            <label>Mallikoodi<input name="model_code" placeholder="QE65..." /></label>
+            <label>Saatavuus<input name="availability" placeholder="Varastossa / tilauksesta" /></label>
+          </div>
+          <label>Tarjousnimi<input name="title" required placeholder="Esim. Samsung 65 toimitettuna" /></label>
+          <label>Kuvaus<textarea name="description" required placeholder="Mitä tarjous sisältää?"></textarea></label>
+          <label>JOUKKO-hinta<input name="price" type="number" min="0" step="0.01" required placeholder="499" /></label>
+          <label>Pakolliset lisäkulut<input name="mandatory_fees" type="number" min="0" step="0.01" placeholder="0" /></label>
+          <label>Normaalihinta<input name="normal_price" type="number" min="0" step="0.01" placeholder="699" /></label>
+          <label>Arvioitu säästö<input name="estimated_saving" type="number" min="0" step="0.01" placeholder="200" /></label>
+          <label>Vähimmäisosallistujamäärä<input name="minimum_participants" type="number" min="1" placeholder="500" /></label>
+          <label>Toimituskulut<input name="delivery_price" type="number" min="0" step="0.01" placeholder="0" /></label>
+          <label>Toimitustapa<input name="delivery_method" placeholder="Toimitettuna, nouto, sähköinen" /></label>
+          <label>Toimitusaika<input name="delivery_time" placeholder="Esim. 5-10 arkipäivää" /></label>
+          <label>Porrastetut hinnat<textarea name="tiers" placeholder={"500=499\n1000=469\n2000=439"}></textarea></label>
+          <label>ALV-status<input name="vat_status" placeholder="Sisältää ALV:n / ALV 0 % / muu" /></label>
+          <label>Sopimuskausi tarvittaessa<input name="contract_length" placeholder="Esim. 12 kk" /></label>
+          <label>Takuu<input name="warranty_terms" placeholder="Esim. 24 kk" /></label>
+          <label>Tarjous päättyy<input name="valid_until" type="date" /></label>
+          <label>Vastaako tarjous Joukon olennaista tarvetta?<select name="requirement_match"><option value="company_confirmed">Kyllä, yritys vahvistaa</option><option value="needs_review">Tarvitsee admin-tarkistuksen</option></select></label>
+          <label>Myyjän myyntiehdot tekstinä<textarea name="terms_text" required placeholder="Yritys kirjoittaa omat ehtonsa. JOUKKO ei generoi ehtoja myyjän puolesta."></textarea></label>
+          <label>Ehtoversio<input name="terms_version" placeholder="seller-terms-v1" /></label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
-          <DemoAction label="Luo tarjousversio ja lähetä tarkistukseen" doneLabel="Demo-tarjousversio tallennettiin stagingiin ilman henkilötietoja." storageKey="joukko-demo-company-offer" />
+          <button className="button" type="submit">Julkaise staging-tarjous</button>
           <button className="button secondary" type="button">Ilmoita ongelmasta</button>
         </form>
 
@@ -71,9 +90,9 @@ export default async function CompanyPage() {
           <h2>Aggregoitu kysyntä</h2>
           <p className="muted">Yritys näkee vain osallistujamäärät, aluejakaumat ja sopimusten päättymisjakaumat. Ei nimiä, sähköposteja tai tarkkoja osoitteita.</p>
           <div className="facts">
-            <div><dt>Voi vaihtaa heti</dt><dd>0</dd></div>
-            <div><dt>0-3 kk</dt><dd>0</dd></div>
-            <div><dt>3-6 kk</dt><dd>0</dd></div>
+            <div><dt>Kiinnostuneet</dt><dd>{groups.reduce((sum, group) => sum + group.member_count, 0).toLocaleString("fi-FI")}</dd></div>
+            <div><dt>Uudet 7 vrk</dt><dd>{groups.reduce((sum, group) => sum + (group.new_members_7d ?? 0), 0).toLocaleString("fi-FI")}</dd></div>
+            <div><dt>Ilman tarjousta</dt><dd>{groups.filter((group) => group.offer_count === 0).length}</dd></div>
           </div>
           <h2>Tarjouksen tila</h2>
           <div className="facts">
