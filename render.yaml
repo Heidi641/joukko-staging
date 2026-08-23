@@ -16,5 +16,13 @@ services:
         value: false
       - key: AI_PROVIDER
         value: mock
+      - key: AI_MODEL
+        value: mock-v1
+      - key: OPENAI_BASE_URL
+        value: https://api.openai.com/v1
+      - key: OPENAI_API_KEY
+        sync: false
       - key: AI_MAX_COST_PER_DAY
+        value: 0
+      - key: AI_MAX_COST_PER_MONTH
         value: 0

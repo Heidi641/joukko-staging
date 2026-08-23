@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 import { approveGroupAction } from "@/lib/actions";
+import { getAiSettings, aiIsUsable } from "@/lib/ai/settings";
 import { getCategories, getGroups } from "@/lib/data";
 import { createSupabaseServerClient } from "@/lib/supabase";
 
@@ -14,6 +15,8 @@ export default async function AdminPage() {
   }
 
   const [groups, categories] = await Promise.all([getGroups(), getCategories()]);
+  const aiSettings = getAiSettings();
+  const aiStatus = aiIsUsable() ? "ON" : "OFF";
   const [{ count: profileCount }, { count: companyCount }, { count: auditCount }, { count: dealCount }, { count: commissionCount }, { count: exceptionCount }] = supabase ? await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("companies").select("id", { count: "exact", head: true }),
@@ -38,7 +41,7 @@ export default async function AdminPage() {
         <article className="card"><h3>Raportit</h3><strong className="big">0</strong><p className="muted">Joukot, tarjoukset ja yritykset</p></article>
         <article className="card"><h3>Audit trail</h3><strong className="big">{auditCount ?? 0}</strong><p className="muted">Tarjousversiot, sitoumukset, perumiset</p></article>
         <article className="card"><h3>Säännellyt kategoriat</h3><strong className="big">LEGAL</strong><p className="warning">JURIDINEN TARKISTUS VAADITAAN ENNEN AKTIVOINTIA</p></article>
-        <article className="card"><h3>AI</h3><strong className="big">OFF</strong><p className="muted">Provider mock · malli mock-v1 · kustannusraja 0 €</p></article>
+        <article className="card"><h3>AI</h3><strong className="big">{aiStatus}</strong><p className="muted">Provider {aiSettings.provider} · malli {aiSettings.model} · päiväkatto {aiSettings.maxCostPerDay} €</p></article>
         <article className="card"><h3>AI-liput</h3><strong className="big">0</strong><p className="muted">Tarkistusta vaativat tarjoukset ja nopeasti kasvavat Joukot</p></article>
         <article className="card"><h3>Dealit</h3><strong className="big">{dealCount ?? 0}</strong><p className="muted">accepted, fulfillment, completed, refund/dispute</p></article>
         <article className="card"><h3>Commissionit</h3><strong className="big">{commissionCount ?? 0}</strong><p className="muted">Koontilaskutus valmiina, live-Stripe pois päältä</p></article>

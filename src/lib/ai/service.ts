@@ -1,4 +1,5 @@
 import { mockAiProvider } from "./mock-provider";
+import { openAiProvider } from "./openai-provider";
 import { aiIsUsable, getAiSettings } from "./settings";
 import type { AiProvider } from "./types";
 
@@ -6,7 +7,7 @@ export function getAiProvider(): AiProvider {
   const settings = getAiSettings();
   if (!aiIsUsable()) return mockAiProvider;
   if (settings.provider === "openai-compatible") {
-    return mockAiProvider;
+    return openAiProvider;
   }
   return mockAiProvider;
 }

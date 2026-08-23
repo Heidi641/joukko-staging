@@ -1,10 +1,11 @@
 import type { AiSettings } from "./types";
 
 export function getAiSettings(): AiSettings {
+  const provider = process.env.AI_PROVIDER === "openai-compatible" ? "openai-compatible" : "mock";
   return {
     enabled: process.env.AI_ENABLED === "true",
-    provider: (process.env.AI_PROVIDER === "openai-compatible" ? "openai-compatible" : "mock"),
-    model: process.env.AI_MODEL || "mock-v1",
+    provider,
+    model: process.env.AI_MODEL || (provider === "openai-compatible" ? "gpt-5.6" : "mock-v1"),
     maxRequestsPerDay: Number(process.env.AI_MAX_REQUESTS_PER_DAY || 100),
     maxRequestsPerUserHour: Number(process.env.AI_MAX_REQUESTS_PER_USER_HOUR || 10),
     maxCostPerDay: Number(process.env.AI_MAX_COST_PER_DAY || 0),
