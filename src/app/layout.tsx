@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { createSupabaseServerClient } from "@/lib/supabase";
 import { isStaging, stagingLabel } from "@/lib/staging";
 import "./globals.css";
 
@@ -14,7 +15,15 @@ export const metadata: Metadata = {
   robots: isStaging ? { index: false, follow: false } : { index: true, follow: true }
 };
 
-const nav = [
+const publicNav = [
+  ["Etusivu", "/"],
+  ["Joukot", "/joukot"],
+  ["Perusta Joukko", "/perusta"],
+  ["Yrityksille", "/yritys"],
+  ["Kirjaudu / Rekisteröidy", "/kirjaudu"]
+];
+
+const privateNav = [
   ["Etusivu", "/"],
   ["Joukot", "/joukot"],
   ["Perusta Joukko", "/perusta"],
@@ -23,7 +32,11 @@ const nav = [
   ["Kirjaudu", "/kirjaudu"]
 ];
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const supabase = await createSupabaseServerClient();
+  const { data } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
+  const nav = data.user ? privateNav : publicNav;
+
   return (
     <html lang="fi">
       <body>
@@ -49,7 +62,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Link href="/joukot">Joukot</Link>
           <Link className="plus" href="/perusta">*</Link>
           <Link href="/tarjoukset">Tarjoukset</Link>
-          <Link href="/minun">Minä</Link>
+          {data.user ? <Link href="/minun">Minä</Link> : <Link href="/kirjaudu">Kirjaudu</Link>}
         </nav>
       </body>
     </html>

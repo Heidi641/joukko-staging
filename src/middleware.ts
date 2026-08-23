@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+const privateRoutes = ["/admin", "/minun", "/perusta"];
+
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -22,7 +24,17 @@ export async function middleware(request: NextRequest) {
     }
   });
 
-  await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+  const pathname = request.nextUrl.pathname;
+  const isPrivateRoute = privateRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
+
+  if (isPrivateRoute && !data.user) {
+    const redirectUrl = request.nextUrl.clone();
+    redirectUrl.pathname = "/kirjaudu";
+    redirectUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+    return NextResponse.redirect(redirectUrl);
+  }
+
   return response;
 }
 
