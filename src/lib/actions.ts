@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { isProductionRelease } from "./staging";
 import { createSupabaseServerClient } from "./supabase";
 
 function value(formData: FormData, key: string) {
@@ -25,7 +26,7 @@ function slugify(input: string) {
 
 async function currentUser() {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) throw new Error("Supabase puuttuu staging-ympäristöstä.");
+  if (!supabase) throw new Error("Supabase puuttuu ympäristöstä.");
   const { data, error } = await supabase.auth.getUser();
   if (error || !data.user) redirect("/kirjaudu");
   return { supabase, user: data.user };
@@ -74,10 +75,14 @@ export async function signUpAction(formData: FormData) {
   });
 
   if (role === "company") {
+    const companyName = value(formData, "company_name");
+    const businessId = value(formData, "business_id");
+    if (!companyName || !businessId) redirect("/rekisteroidy?virhe=yritystiedot");
+
     await supabase.from("companies").insert({
       owner_id: data.user.id,
-      name: value(formData, "company_name") || `${displayName || email} yritys`,
-      business_id: value(formData, "business_id") || "TESTI-Y-TUNNUS",
+      name: companyName,
+      business_id: businessId,
       email,
       contact_email: email,
       customer_service_contact: email,
@@ -110,12 +115,20 @@ export async function createGroupAction(formData: FormData) {
   const name = value(formData, "name");
   const exact = value(formData, "group_type") === "exact";
   const slug = `${slugify(name)}-${Date.now().toString(36)}`;
+  const categoryId = value(formData, "category_id");
+  const { data: category } = await supabase
+    .from("categories")
+    .select("id, active")
+    .eq("id", categoryId)
+    .eq("active", true)
+    .single();
+  if (!category) redirect("/perusta?virhe=kategoria");
 
   const { data, error } = await supabase
     .from("groups")
     .insert({
       founder_id: user.id,
-      category_id: value(formData, "category_id"),
+      category_id: categoryId,
       group_type: exact ? "exact" : "open",
       name,
       slug,
@@ -152,8 +165,15 @@ export async function createOfferAction(formData: FormData) {
   if (!company) redirect("/yritys?virhe=yritys");
 
   const groupId = value(formData, "group_id");
-  const { data: group } = await supabase.from("groups").select("id, group_type, brand, model_code").eq("id", groupId).single();
+  const { data: group } = await supabase
+    .from("groups")
+    .select("id, group_type, brand, model_code, categories!inner(id, active, regulated)")
+    .eq("id", groupId)
+    .single();
   if (!group) redirect("/yritys?virhe=joukko");
+  const category = Array.isArray(group.categories) ? group.categories[0] : group.categories;
+  if (!category?.active) redirect("/yritys?virhe=kategoria");
+  if (isProductionRelease && category.regulated) redirect("/yritys?virhe=regulated");
 
   if (group.group_type === "exact") {
     const exactBrand = String(group.brand ?? "").trim().toLowerCase();

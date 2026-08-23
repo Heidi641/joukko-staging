@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { signInAction, signOutAction } from "@/lib/actions";
 import { createSupabaseServerClient } from "@/lib/supabase";
-import { testAccounts } from "@/lib/staging";
+import { isStaging } from "@/lib/staging";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams;
@@ -13,7 +13,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <section className="page-title">
         <div>
           <h1>Kirjaudu</h1>
-          <p>Staging käyttää Supabase Authia. Roolit ovat kuluttaja, yritys ja admin.</p>
+          <p>{isStaging ? "Staging käyttää Supabase Authia. Roolit ovat kuluttaja, yritys ja admin." : "Kirjaudu sisään JOUKKO-tilillesi."}</p>
         </div>
       </section>
       {params.virhe && <div className="notice warning">Kirjautuminen epäonnistui. Tarkista testitunnus.</div>}
@@ -30,21 +30,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           <p className="muted">Ei tiliä? <Link href="/rekisteroidy">Rekisteröidy</Link></p>
         </form>
       )}
-      <section className="section-head">
-        <div>
-          <h2>Staging-testitunnukset</h2>
-          <p className="muted">Nämä ovat vain testiympäristöä varten. Salasana on sama kaikille testirooleille.</p>
-        </div>
-      </section>
-      <section className="grid">
-        {testAccounts.map((account) => (
-          <article className="test-account" key={account.email}>
-            <strong>{account.role}</strong>
-            <span>{account.email}</span>
-            <span>{account.password}</span>
-          </article>
-        ))}
-      </section>
+      {isStaging && (
+        <div className="notice">Tämä on staging-ympäristö. Testitunnuksia ei upoteta production-buildiin.</div>
+      )}
     </>
   );
 }
