@@ -11,7 +11,7 @@ export function GroupCard({ group }: { group: Group }) {
       </div>
       <h3>{group.name}</h3>
       <p>{group.description}</p>
-      <strong className="big">{group.member_count.toLocaleString("fi-FI")} kiinnostunutta</strong>
+      <strong className="big">{group.member_count > 0 ? `${group.member_count.toLocaleString("fi-FI")} kiinnostunutta` : "Ole ensimmäisten joukossa"}</strong>
       <p className="muted">{group.group_type === "exact" ? "Tarkka Joukko" : "Avoin Joukko"}{group.model_code ? ` · ${group.model_code}` : ""}</p>
       <ProgressBar count={group.member_count} target={group.target_count} />
       <p className="muted">

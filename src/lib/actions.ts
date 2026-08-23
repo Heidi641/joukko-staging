@@ -55,42 +55,74 @@ export async function signUpAction(formData: FormData) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new Error("Supabase ei ole käytössä.");
 
-  const requestedRole = value(formData, "role");
-  const role = requestedRole === "company" ? "company" : "consumer";
   const email = value(formData, "email");
   const displayName = value(formData, "display_name");
+  const termsVersion = value(formData, "terms_version");
+  const privacyVersion = value(formData, "privacy_version");
+  const aiNoticeVersion = value(formData, "ai_notice_version");
+
+  if (formData.get("accept_terms") !== "on" || formData.get("accept_privacy") !== "on" || formData.get("accept_ai_notice") !== "on") {
+    redirect("/rekisteroidy?virhe=ehdot");
+  }
 
   const { data, error } = await supabase.auth.signUp({
     email,
     password: value(formData, "password"),
-    options: { data: { display_name: displayName, role } }
+    options: { data: { display_name: displayName, role: "consumer" } }
   });
 
   if (error || !data.user) redirect("/rekisteroidy?virhe=1");
+  const userId = data.user.id;
 
   await supabase.from("profiles").upsert({
-    id: data.user.id,
-    role,
-    display_name: displayName || email
+    id: userId,
+    role: "consumer",
+    display_name: displayName || email,
+    buyer_company_name: value(formData, "buyer_company_name") || null,
+    buyer_business_id: value(formData, "buyer_business_id") || null,
+    terms_version: termsVersion,
+    privacy_version: privacyVersion,
+    ai_notice_version: aiNoticeVersion,
+    terms_accepted_at: new Date().toISOString(),
+    privacy_accepted_at: new Date().toISOString(),
+    ai_notice_accepted_at: new Date().toISOString(),
+    marketing_consent: formData.get("marketing_consent") === "on"
   });
 
-  if (role === "company") {
-    const companyName = value(formData, "company_name");
-    const businessId = value(formData, "business_id");
-    if (!companyName || !businessId) redirect("/rekisteroidy?virhe=yritystiedot");
-
-    await supabase.from("companies").insert({
-      owner_id: data.user.id,
-      name: companyName,
-      business_id: businessId,
-      email,
-      contact_email: email,
-      customer_service_contact: email,
-      verification_status: "unverified"
-    });
-  }
+  const { data: docs } = await supabase
+    .from("legal_documents")
+    .select("id, slug")
+    .in("slug", ["kayttoehdot", "tietosuoja", "tekoaly"]);
+  const acceptances = (docs ?? []).map((doc) => ({
+    profile_id: userId,
+    document_id: doc.id,
+    acceptance_context: `registration:${doc.slug}`
+  }));
+  if (acceptances.length > 0) await supabase.from("legal_acceptances").upsert(acceptances, { onConflict: "profile_id,document_id,acceptance_context" });
 
   redirect("/minun");
+}
+
+export async function createCompanyProfileAction(formData: FormData) {
+  const { supabase, user } = await currentUser();
+  const companyName = value(formData, "company_name");
+  const businessId = value(formData, "business_id");
+  const contactEmail = value(formData, "contact_email") || user.email || "";
+
+  if (!companyName || !businessId || !contactEmail) redirect("/yritys?virhe=yritystiedot");
+
+  await supabase.from("companies").insert({
+    owner_id: user.id,
+    name: companyName,
+    business_id: businessId,
+    email: contactEmail,
+    contact_email: contactEmail,
+    customer_service_contact: value(formData, "customer_service_contact") || contactEmail,
+    verification_status: "pending_verification"
+  });
+
+  revalidatePath("/yritys");
+  redirect("/yritys?yritysprofiili=luotu");
 }
 
 export async function joinGroupAction(formData: FormData) {
@@ -152,8 +184,6 @@ export async function createGroupAction(formData: FormData) {
 
 export async function createOfferAction(formData: FormData) {
   const { supabase, user } = await currentUser();
-  const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-  if (profile?.role !== "company") redirect("/yritys?virhe=rooli");
 
   const { data: company } = await supabase
     .from("companies")

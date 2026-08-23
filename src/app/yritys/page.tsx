@@ -1,5 +1,5 @@
 import { GroupCard } from "@/components/group-card";
-import { createOfferAction } from "@/lib/actions";
+import { createCompanyProfileAction, createOfferAction } from "@/lib/actions";
 import { getCategories, getGroups } from "@/lib/data";
 
 export default async function CompanyPage() {
@@ -45,6 +45,17 @@ export default async function CompanyPage() {
       </section>
 
       <section className="columns">
+        <form className="panel" action={createCompanyProfileAction}>
+          <h2>Tarjoa yrityksenä</h2>
+          <p className="muted">Tämä luo erillisen yritysprofiilin. Käyttäjätilisi voi edelleen toimia ostajana, eikä ostajan rooli muutu myyjäksi.</p>
+          <label>Yrityksen virallinen nimi<input name="company_name" required /></label>
+          <label>Y-tunnus tai yritystunniste<input name="business_id" required /></label>
+          <label>Yhteyssähköposti<input name="contact_email" type="email" required /></label>
+          <label>Asiakaspalvelun yhteystieto<input name="customer_service_contact" /></label>
+          <div className="notice">Tarjousten julkaisu vaatii adminin verified-varmennuksen. Varmennusmerkkiä ei näytetä ennen oikeaa varmennusta.</div>
+          <button className="button" type="submit">Luo yritysprofiili</button>
+        </form>
+
         <form className="panel" action={createOfferAction}>
           <h2>Tee tarjous kysyntään</h2>
           <p className="muted">Tarjouksen julkaisu vaatii verified-yrityksen. Kun tarjous julkaistaan ja kuluttajat alkavat sitoutua siihen, olennaiset kentät lukitaan.</p>
@@ -109,7 +120,7 @@ export default async function CompanyPage() {
           </div>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
-          <label className="check"><input type="checkbox" required /> Hyväksyn JOUKON palkkioehdot tälle kampanjalle. Live-Stripe ei ole käytössä stagingissa.</label>
+          <label className="check"><input type="checkbox" required /> Hyväksyn JOUKON palkkioehdot tälle kampanjalle. Live-Stripeä ei kytketä ilman erillistä hyväksyntää.</label>
           <button className="button" type="submit">Julkaise staging-tarjous</button>
         </form>
 

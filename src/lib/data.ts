@@ -1,4 +1,5 @@
 import { categories as demoCategories, groups as demoGroups, metrics as demoMetrics, offers as demoOffers } from "./demo-data";
+import { launchCategories, productionStarterGroups } from "./catalog";
 import { createSupabaseServerClient } from "./supabase";
 import { isProductionRelease, isStaging } from "./staging";
 import type { Category, Group, Metrics, Offer } from "./types";
@@ -24,7 +25,7 @@ export async function getMetrics(): Promise<Metrics> {
 
 export async function getCategories(): Promise<Category[]> {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return isStaging ? demoCategories : [];
+  if (!supabase) return isStaging ? demoCategories : launchCategories;
 
   const { data, error } = await supabase
     .from("category_participation_counts")
@@ -32,13 +33,13 @@ export async function getCategories(): Promise<Category[]> {
     .eq("active", true)
     .order("sort_order", { ascending: true });
 
-  if (error || !data) return isStaging ? demoCategories : [];
+  if (error || !data) return isStaging ? demoCategories : launchCategories;
   return data as Category[];
 }
 
 export async function getGroups(): Promise<Group[]> {
   const supabase = await createSupabaseServerClient();
-  if (!supabase) return isStaging ? demoGroups : [];
+  if (!supabase) return isStaging ? demoGroups : productionStarterGroups;
 
   const { data, error } = await supabase
     .from("group_cards")
@@ -47,8 +48,9 @@ export async function getGroups(): Promise<Group[]> {
     .order("featured", { ascending: false })
     .order("member_count", { ascending: false });
 
-  if (error || !data) return isStaging ? demoGroups : [];
-  return data as Group[];
+  if (error || !data) return isStaging ? demoGroups : productionStarterGroups;
+  const groups = data as Group[];
+  return isProductionRelease && groups.length === 0 ? productionStarterGroups : groups;
 }
 
 export async function getGroup(id: string): Promise<Group | null> {

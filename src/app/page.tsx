@@ -1,6 +1,25 @@
 import Link from "next/link";
 import { GroupCard } from "@/components/group-card";
+import { growingCategoryLabels } from "@/lib/catalog";
 import { findSimilarGroups, getCategories, getGroups, getMetrics } from "@/lib/data";
+import type { Group } from "@/lib/types";
+
+function groupSection(title: string, groups: Group[], slugIncludes: string[]) {
+  const selected = groups.filter((group) => slugIncludes.some((slug) => group.category_slug.includes(slug))).slice(0, 4);
+  if (selected.length === 0) return null;
+
+  return (
+    <>
+      <section className="section-head">
+        <h2>{title}</h2>
+        <Link className="button secondary" href="/joukot">Näytä lisää</Link>
+      </section>
+      <section className="grid">
+        {selected.map((group) => <GroupCard group={group} key={group.id} />)}
+      </section>
+    </>
+  );
+}
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams;
@@ -56,8 +75,8 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
 
       <section className="section-head">
         <div>
-          <h2>Suositut / kasvavat Joukot</h2>
-          <p className="muted">Rajattu näkymä kysyntään. Kaikki Joukot löytyvät omalta sivultaan.</p>
+          <h2>Suosituimmat nyt</h2>
+          <p className="muted">Näkyvyys perustuu oikeaan dataan tai adminin aloitusjärjestykseen. Nollatilanteessa emme feikkaa suosiota.</p>
         </div>
         <Link className="button secondary" href="/joukot">Näytä kaikki</Link>
       </section>
@@ -67,16 +86,39 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         {featuredGroups.length === 0 && <div className="empty">Ei Joukkoja vielä. Perusta ensimmäinen Joukko.</div>}
       </section>
 
+      {groupSection("Arjen sopimukset", groups, ["sopimukset"])}
+      {groupSection("Koti & energia", groups, ["koti-energia"])}
+      {groupSection("Elektroniikka & kodinkoneet", groups, ["elektroniikka", "ostokset"])}
+      {groupSection("Autoilu", groups, ["autoilu", "liikkuminen"])}
+      {groupSection("Matkailu & vapaa-aika", groups, ["matkailu", "matkat"])}
+      {groupSection("Palvelut", groups, ["palvelut"])}
+
       <section className="section-head">
         <div>
-          <h2>Pääkategoriat</h2>
+          <h2>Kasvavat kategoriat</h2>
+          <p className="muted">Näitä voi kasvattaa, mutta niitä ei merkitä tekaistusti suosituiksi.</p>
+        </div>
+      </section>
+
+      <section className="tag-grid">
+        {growingCategoryLabels.slice(0, 12).map((label) => (
+          <Link className="tag-card" href={`/perusta?nimi=${encodeURIComponent(label)}`} key={label}>
+            <strong>{label}</strong>
+            <span>Aloita tai etsi Joukko</span>
+          </Link>
+        ))}
+      </section>
+
+      <section className="section-head">
+        <div>
+          <h2>Kaikki pääkategoriat</h2>
           <p className="muted">Osallistumismäärät lasketaan tietokannasta. Tyhjä kanta näyttää nollaa.</p>
         </div>
         <Link className="button secondary" href="/joukot">Kaikki kategoriat</Link>
       </section>
 
       <section className="grid">
-        {categories.slice(0, 6).map((category) => (
+        {categories.slice(0, 8).map((category) => (
           <article className="card" key={category.id}>
             <div className="card-top">
               <span className="icon">{category.icon}</span>
@@ -91,6 +133,9 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         ))}
       </section>
 
+      <section className="section-head">
+        <h2>Näin JOUKKO toimii</h2>
+      </section>
       <section className="grid">
         <article className="card"><h3>1. Kerro mitä haluat</h3><p>Kirjoita ostotoive tavallisella kielellä.</p></article>
         <article className="card"><h3>2. Muut liittyvät mukaan</h3><p>Samaa haluavat ihmiset kerääntyvät JOUKOKSI.</p></article>
