@@ -232,17 +232,78 @@ alter table public.commissions enable row level security;
 alter table public.commission_batches enable row level security;
 alter table public.offer_exception_requests enable row level security;
 
+revoke insert, update, delete, truncate, references, trigger on public.commissions from anon, authenticated;
+revoke insert, update, delete, truncate, references, trigger on public.commission_batches from anon, authenticated;
+revoke update, delete, truncate, references, trigger on public.deals from anon, authenticated;
+revoke update, delete, truncate, references, trigger on public.data_sharing_consents from anon, authenticated;
+
+grant select on public.deals to authenticated;
+grant select, insert on public.data_sharing_consents to authenticated;
+grant select on public.commissions to authenticated;
+grant select on public.commission_batches to authenticated;
+
+create or replace function public.has_data_sharing_consent(
+  p_offer_version_id uuid,
+  p_profile_id uuid,
+  p_company_id uuid,
+  p_consent_version text
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.data_sharing_consents dsc
+    where dsc.offer_version_id = p_offer_version_id
+      and dsc.profile_id = p_profile_id
+      and dsc.company_id = p_company_id
+      and dsc.consent_version = p_consent_version
+  )
+$$;
+
+create or replace function public.has_company_deal_for_consent(
+  p_offer_version_id uuid,
+  p_profile_id uuid,
+  p_company_id uuid,
+  p_consent_version text
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1 from public.deals d
+    where d.offer_version_id = p_offer_version_id
+      and d.user_id = p_profile_id
+      and d.company_id = p_company_id
+      and d.data_sharing_consent_version = p_consent_version
+  )
+$$;
+
+revoke all on function public.has_data_sharing_consent(uuid, uuid, uuid, text) from public, anon, authenticated;
+revoke all on function public.has_company_deal_for_consent(uuid, uuid, uuid, text) from public, anon, authenticated;
+
 create policy "users can read own data sharing consents" on public.data_sharing_consents
   for select using (auth.uid() = profile_id);
 create policy "users can create own data sharing consents" on public.data_sharing_consents
   for insert with check (auth.uid() = profile_id);
+create policy "company owners can read consents for own deals" on public.data_sharing_consents
+  for select using (
+    exists (select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid())
+    and public.has_company_deal_for_consent(data_sharing_consents.offer_version_id, data_sharing_consents.profile_id, data_sharing_consents.company_id, data_sharing_consents.consent_version)
+  );
 
 create policy "users can read own deals" on public.deals
   for select using (auth.uid() = user_id);
-create policy "company owners can read accepted deals for own offers" on public.deals
-  for select using (exists (
-    select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid()
-  ));
+create policy "company owners can read consented own offer deals" on public.deals
+  for select using (
+    exists (select 1 from public.companies c where c.id = company_id and c.owner_id = auth.uid())
+    and public.has_data_sharing_consent(deals.offer_version_id, deals.user_id, deals.company_id, deals.data_sharing_consent_version)
+  );
 
 create policy "company owners can read own commissions" on public.commissions
   for select using (exists (
@@ -291,13 +352,18 @@ $$;
 create or replace function public.create_deal_for_acceptance()
 returns trigger
 language plpgsql
-security invoker
+security definer
+set search_path = public
 as $$
 declare
   v_group_id uuid;
   v_fulfillment jsonb;
   v_consent_version text := 'data-sharing-v1';
 begin
+  if (select auth.uid()) is distinct from new.profile_id then
+    raise exception 'deal creation requires the accepting user';
+  end if;
+
   if new.acceptance_snapshot->>'data_sharing_consent_version' is distinct from v_consent_version then
     raise exception 'data sharing consent is required before creating a deal';
   end if;
@@ -374,6 +440,8 @@ begin
   return new;
 end
 $$;
+
+revoke all on function public.create_deal_for_acceptance() from public, anon, authenticated;
 
 drop trigger if exists trg_create_deal_for_acceptance on public.offer_acceptances;
 create trigger trg_create_deal_for_acceptance
