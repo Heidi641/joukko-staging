@@ -196,7 +196,16 @@ export async function createOfferAction(formData: FormData) {
 
   const { data: offer, error } = await supabase
     .from("offers")
-    .insert({ group_id: groupId, company_id: company.id, status: "active", current_version: 1 })
+    .insert({
+      group_id: groupId,
+      company_id: company.id,
+      status: "active",
+      current_version: 1,
+      closes_at: value(formData, "valid_until") ? `${value(formData, "valid_until")}T23:59:59+02:00` : null,
+      max_acceptances: numberValue(formData, "max_acceptances") || null,
+      stock_limit: numberValue(formData, "stock_limit") || null,
+      unlimited_until_close: formData.get("unlimited_until_close") === "on"
+    })
     .select("id")
     .single();
 
@@ -227,9 +236,23 @@ export async function createOfferAction(formData: FormData) {
       shipping_price: delivery,
       delivery_method: value(formData, "delivery_method") || "Myyjän ilmoittama",
       delivery_time: value(formData, "delivery_time") || null,
+      fulfillment_start_type: value(formData, "fulfillment_start_type") || "after_offer_closes",
+      fulfillment_start_date: value(formData, "fulfillment_start_date") || null,
+      fulfillment_end_date: value(formData, "fulfillment_end_date") || null,
+      delivery_days_min: numberValue(formData, "delivery_days_min") || null,
+      delivery_days_max: numberValue(formData, "delivery_days_max") || null,
+      fulfillment_note: value(formData, "fulfillment_note") || null,
+      max_acceptances: numberValue(formData, "max_acceptances") || null,
+      stock_limit: numberValue(formData, "stock_limit") || null,
+      unlimited_until_close: formData.get("unlimited_until_close") === "on",
       minimum_participants: numberValue(formData, "minimum_participants", 1),
       contract_length: value(formData, "contract_length") || null,
       vat_status: value(formData, "vat_status") || "Sisältää ALV:n",
+      commission_type: value(formData, "commission_type") || "manual_review_required",
+      commission_value: numberValue(formData, "commission_value") || null,
+      commission_currency: "EUR",
+      commission_terms_version: value(formData, "commission_terms_version") || "commission-terms-v1-LEGAL_REVIEW_REQUIRED",
+      commission_terms_accepted_by_company_at: new Date().toISOString(),
       terms_type: "text",
       terms_text: termsText,
       terms_version: value(formData, "terms_version") || `terms-${Date.now()}`,
@@ -275,10 +298,38 @@ export async function createOfferAction(formData: FormData) {
 export async function acceptOfferAction(formData: FormData) {
   const { supabase, user } = await currentUser();
   const groupId = value(formData, "group_id");
+  const offerId = value(formData, "offer_id");
+  const offerVersionId = value(formData, "offer_version_id");
+
+  const { data: offerVersion } = await supabase
+    .from("offer_versions")
+    .select("id, offer_id, valid_until, max_acceptances, stock_limit, unlimited_until_close, fulfillment_start_type, fulfillment_start_date, fulfillment_end_date, delivery_days_min, delivery_days_max, fulfillment_note, terms_version, offers!inner(status)")
+    .eq("id", offerVersionId)
+    .single();
+
+  const joinedOffer = offerVersion?.offers as { status?: string } | { status?: string }[] | undefined;
+  const offerStatus = Array.isArray(joinedOffer) ? joinedOffer[0]?.status : joinedOffer?.status;
+  if (!offerVersion || !["active", "published"].includes(String(offerStatus))) redirect(`/joukot/${groupId}?virhe=tarjous_suljettu`);
+
+  if (offerVersion.valid_until && new Date(`${offerVersion.valid_until}T23:59:59`) < new Date()) {
+    await supabase.from("offers").update({ status: "closed_to_new", closed_at: new Date().toISOString() }).eq("id", offerId);
+    redirect(`/joukot/${groupId}?virhe=tarjous_suljettu`);
+  }
+
+  const { count: acceptedCount } = await supabase
+    .from("offer_acceptances")
+    .select("id", { count: "exact", head: true })
+    .eq("offer_version_id", offerVersionId)
+    .in("status", ["accepted", "auto_improved", "confirmed", "completed"]);
+
+  const capacity = offerVersion.unlimited_until_close ? null : (offerVersion.max_acceptances ?? offerVersion.stock_limit);
+  if (capacity && (acceptedCount ?? 0) >= capacity) redirect(`/joukot/${groupId}?virhe=kapasiteetti_taynna`);
+
+  if (formData.get("data_sharing_consent") !== "on") redirect(`/joukot/${groupId}?virhe=tietojenluovutus`);
 
   await supabase.from("offer_acceptances").upsert({
-    offer_id: value(formData, "offer_id"),
-    offer_version_id: value(formData, "offer_version_id"),
+    offer_id: offerId,
+    offer_version_id: offerVersionId,
     company_id: value(formData, "company_id"),
     profile_id: user.id,
     accepted_price: numberValue(formData, "accepted_price"),
@@ -291,6 +342,15 @@ export async function acceptOfferAction(formData: FormData) {
       product_or_service: value(formData, "product_or_service"),
       total_price: numberValue(formData, "current_price"),
       seller_terms: value(formData, "terms_version"),
+      data_sharing_consent_version: "data-sharing-v1",
+      fulfillment: {
+        fulfillment_start_type: offerVersion.fulfillment_start_type,
+        fulfillment_start_date: offerVersion.fulfillment_start_date,
+        fulfillment_end_date: offerVersion.fulfillment_end_date,
+        delivery_days_min: offerVersion.delivery_days_min,
+        delivery_days_max: offerVersion.delivery_days_max,
+        fulfillment_note: offerVersion.fulfillment_note
+      },
       legal_note: "JOUKKO on alusta. Myyjä vastaa kaupasta ja ehdoista."
     }
   }, { onConflict: "offer_version_id,profile_id" });

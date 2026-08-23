@@ -24,6 +24,7 @@ export default async function OffersPage() {
             <p>{offer.description}</p>
             <p className="muted">{offer.brand ?? "Myyjän tuote"} {offer.model ?? ""} · {offer.accepted_count ?? 0} hyväksyntää</p>
             <p className="muted">Toimitus {offer.delivery_price ?? 0} € · säästö {offer.estimated_saving ?? 0} € · vähintään {offer.minimum_participants}</p>
+            <p className="muted">Päättyy {offer.valid_until ?? "ei ilmoitettu"} · toteutus {offer.delivery_days_min && offer.delivery_days_max ? `${offer.delivery_days_min}-${offer.delivery_days_max} arkipäivää` : offer.delivery_time ?? "ei ilmoitettu"}</p>
             <p>{offer.terms}</p>
             <div className="actions"><a className="button" href={`/joukot/${offer.group_id}`}>Katso tarjous</a></div>
           </article>

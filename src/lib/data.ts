@@ -68,7 +68,17 @@ export async function getOffersForGroup(groupId: string): Promise<Offer[]> {
     .order("total_price", { ascending: true });
 
   if (error || !data) return [];
-  return data as Offer[];
+  const offers = data as Offer[];
+  const versionIds = offers.map((offer) => offer.offer_version_id).filter(Boolean) as string[];
+  if (versionIds.length === 0) return offers;
+
+  const { data: versions } = await supabase
+    .from("offer_versions")
+    .select("id, fulfillment_start_type, fulfillment_start_date, fulfillment_end_date, delivery_days_min, delivery_days_max, fulfillment_note, max_acceptances, stock_limit, unlimited_until_close, commission_type, commission_value, commission_currency, commission_terms_version")
+    .in("id", versionIds);
+
+  const byId = new Map((versions ?? []).map((version) => [version.id, version]));
+  return offers.map((offer) => ({ ...offer, ...(offer.offer_version_id ? byId.get(offer.offer_version_id) : {}) }));
 }
 
 export async function findSimilarGroups(query: string): Promise<Group[]> {

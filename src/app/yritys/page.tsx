@@ -63,9 +63,30 @@ export default async function CompanyPage() {
           <label>Normaalihinta<input name="normal_price" type="number" min="0" step="0.01" placeholder="699" /></label>
           <label>Arvioitu säästö<input name="estimated_saving" type="number" min="0" step="0.01" placeholder="200" /></label>
           <label>Vähimmäisosallistujamäärä<input name="minimum_participants" type="number" min="1" placeholder="500" /></label>
+          <div className="grid two compact">
+            <label>Maksimi hyväksyjämäärä<input name="max_acceptances" type="number" min="1" placeholder="1000" /></label>
+            <label>Varasto-/kapasiteettiraja<input name="stock_limit" type="number" min="1" placeholder="1000" /></label>
+          </div>
+          <label className="check"><input type="checkbox" name="unlimited_until_close" /> Ei ennalta määritettyä maksimia; hyväksytyt käsitellään tarjouksen sulkeuduttua</label>
           <label>Toimituskulut<input name="delivery_price" type="number" min="0" step="0.01" placeholder="0" /></label>
           <label>Toimitustapa<input name="delivery_method" placeholder="Toimitettuna, nouto, sähköinen" /></label>
           <label>Toimitusaika<input name="delivery_time" placeholder="Esim. 5-10 arkipäivää" /></label>
+          <label>Milloin toimitus/toteutus alkaa?
+            <select name="fulfillment_start_type" defaultValue="after_offer_closes">
+              <option value="immediately_after_acceptance">Heti hyväksynnän jälkeen</option>
+              <option value="after_offer_closes">Tarjouksen päättymisen jälkeen</option>
+              <option value="fixed_date">Tiettynä päivänä</option>
+              <option value="date_range">Päivämäärävälillä</option>
+              <option value="company_schedules_with_customer">Yritys sopii ajan asiakkaan kanssa</option>
+            </select>
+          </label>
+          <div className="grid two compact">
+            <label>Toteutus alkaa<input name="fulfillment_start_date" type="date" /></label>
+            <label>Toteutus päättyy<input name="fulfillment_end_date" type="date" /></label>
+            <label>Min. arkipäivää<input name="delivery_days_min" type="number" min="0" placeholder="5" /></label>
+            <label>Max. arkipäivää<input name="delivery_days_max" type="number" min="0" placeholder="10" /></label>
+          </div>
+          <label>Toimitus-/toteutuslisätieto<textarea name="fulfillment_note" placeholder="Esim. toimitus 5-10 arkipäivässä tarjouksen sulkeutumisesta."></textarea></label>
           <label>Porrastetut hinnat<textarea name="tiers" placeholder={"500=499\n1000=469\n2000=439"}></textarea></label>
           <label>ALV-status<input name="vat_status" placeholder="Sisältää ALV:n / ALV 0 % / muu" /></label>
           <label>Sopimuskausi tarvittaessa<input name="contract_length" placeholder="Esim. 12 kk" /></label>
@@ -74,8 +95,21 @@ export default async function CompanyPage() {
           <label>Vastaako tarjous Joukon olennaista tarvetta?<select name="requirement_match"><option value="company_confirmed">Kyllä, yritys vahvistaa</option><option value="needs_review">Tarvitsee admin-tarkistuksen</option></select></label>
           <label>Myyjän myyntiehdot tekstinä<textarea name="terms_text" required placeholder="Yritys kirjoittaa omat ehtonsa. JOUKKO ei generoi ehtoja myyjän puolesta."></textarea></label>
           <label>Ehtoversio<input name="terms_version" placeholder="seller-terms-v1" /></label>
+          <label>JOUKKO-palkkiomalli
+            <select name="commission_type" defaultValue="percentage_of_trade">
+              <option value="percentage_of_trade">% completed kaupasta</option>
+              <option value="per_completed_customer">€/completed asiakas</option>
+              <option value="fixed_campaign_fee">Kiinteä kampanjapalkkio</option>
+              <option value="manual_review_required">Admin määrittää myöhemmin</option>
+            </select>
+          </label>
+          <div className="grid two compact">
+            <label>Palkkioarvo<input name="commission_value" type="number" min="0" step="0.01" placeholder="3" /></label>
+            <label>Palkkioehtojen versio<input name="commission_terms_version" placeholder="commission-v1" /></label>
+          </div>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
+          <label className="check"><input type="checkbox" required /> Hyväksyn JOUKON palkkioehdot tälle kampanjalle. Live-Stripe ei ole käytössä stagingissa.</label>
           <button className="button" type="submit">Julkaise staging-tarjous</button>
         </form>
 

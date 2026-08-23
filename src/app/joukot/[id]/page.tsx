@@ -99,6 +99,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
             <strong className="big">{offer.total_price.toLocaleString("fi-FI")} €</strong>
             <p>{offer.description}</p>
             <p className="muted">{(offer.accepted_count ?? 0).toLocaleString("fi-FI")} hyväksynyt tämän tarjouksen · säästöarvio {offer.estimated_saving ?? 0} € · vähintään {offer.minimum_participants} hyväksyjää</p>
+            <p className="muted">Tarjous päättyy {offer.valid_until ?? "ei ilmoitettu"} · toimitus alkaa {offer.fulfillment_start_type === "immediately_after_acceptance" ? "heti hyväksynnän jälkeen" : "tarjouksen päättymisen jälkeen"} · arvio {offer.delivery_days_min && offer.delivery_days_max ? `${offer.delivery_days_min}-${offer.delivery_days_max} arkipäivää` : offer.delivery_time ?? "ei ilmoitettu"}</p>
             <p className="muted">Osuvuus: {offer.requirement_match} · kategoria: {offer.category_match}</p>
             <p>{offer.terms}</p>
             <OfferAcceptanceCard offer={offer} acceptedCount={group.committed_count} />

@@ -7,6 +7,10 @@ export type MatchStatus = "conditional_match" | "threshold_reached" | "confirmed
 export type CompanyVerificationStatus = "unverified" | "pending_verification" | "verified" | "suspended";
 export type SellerTermsType = "text" | "url" | "document";
 export type OfferAcceptanceStatus = "accepted" | "auto_improved" | "new_acceptance_required" | "confirmed" | "completed" | "expired" | "cancelled";
+export type OfferLifecycleStatus = "draft" | "published" | "active" | "closed_to_new" | "fulfillment" | "completed" | "cancelled_exception" | "expired" | "archived";
+export type FulfillmentStartType = "immediately_after_acceptance" | "after_offer_closes" | "fixed_date" | "date_range" | "company_schedules_with_customer";
+export type DealStatus = "accepted" | "contact_shared" | "checkout_sent" | "checkout_started" | "order_confirmed" | "fulfillment_pending" | "fulfillment_in_progress" | "completed" | "cancelled" | "refunded" | "disputed";
+export type CommissionStatus = "pending" | "accrued" | "invoiced" | "paid" | "failed" | "credited" | "void";
 
 export type Category = {
   id: string;
@@ -67,11 +71,12 @@ export type Offer = {
   group_id: string;
   company_id?: string;
   offer_version_id?: string;
+  status?: OfferLifecycleStatus;
   version: number;
   company_name: string;
   company_verification_status: CompanyVerificationStatus;
-  company_business_id: string;
-  company_contact: string;
+  company_business_id: string | null;
+  company_contact: string | null;
   company_country: string;
   title: string;
   product_or_service: string;
@@ -104,11 +109,43 @@ export type Offer = {
   accepted_by_company_at: string | null;
   starts_at: string | null;
   valid_until: string;
+  fulfillment_start_type?: FulfillmentStartType;
+  fulfillment_start_date?: string | null;
+  fulfillment_end_date?: string | null;
+  delivery_days_min?: number | null;
+  delivery_days_max?: number | null;
+  fulfillment_note?: string | null;
+  max_acceptances?: number | null;
+  stock_limit?: number | null;
+  unlimited_until_close?: boolean;
+  commission_type?: "per_completed_customer" | "percentage_of_trade" | "fixed_campaign_fee" | "manual_review_required";
+  commission_value?: number | null;
+  commission_currency?: string;
+  commission_terms_version?: string;
   tiers: OfferTier[];
   accepted_count?: number;
+  deal_count?: number;
   locked_at: string | null;
   published_at: string | null;
   response_status?: "pending" | "accepted" | "rejected";
+};
+
+export type Deal = {
+  id: string;
+  offer_id: string;
+  offer_version_id: string;
+  company_id: string;
+  user_id: string;
+  accepted_total_price: number;
+  accepted_terms_version: string;
+  accepted_fulfillment_terms: Record<string, unknown>;
+  data_sharing_consent_version: string;
+  checkout_url: string | null;
+  redemption_url: string | null;
+  referral_code: string | null;
+  status: DealStatus;
+  created_at: string;
+  completed_at: string | null;
 };
 
 export type OfferAcceptance = {
