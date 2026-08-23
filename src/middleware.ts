@@ -8,8 +8,12 @@ export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const pathname = request.nextUrl.pathname;
+  const isPrivateRoute = privateRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
-  if (!url || !anonKey) return response;
+  if (!url || !anonKey) {
+    return isPrivateRoute ? redirectToLogin(request, pathname) : response;
+  }
 
   const supabase = createServerClient(url, anonKey, {
     cookies: {
@@ -25,17 +29,19 @@ export async function middleware(request: NextRequest) {
   });
 
   const { data } = await supabase.auth.getUser();
-  const pathname = request.nextUrl.pathname;
-  const isPrivateRoute = privateRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   if (isPrivateRoute && !data.user) {
-    const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = "/kirjaudu";
-    redirectUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
-    return NextResponse.redirect(redirectUrl);
+    return redirectToLogin(request, pathname);
   }
 
   return response;
+}
+
+function redirectToLogin(request: NextRequest, pathname: string) {
+  const redirectUrl = request.nextUrl.clone();
+  redirectUrl.pathname = "/kirjaudu";
+  redirectUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
+  return NextResponse.redirect(redirectUrl);
 }
 
 export const config = {
