@@ -118,7 +118,7 @@ export type Offer = {
   max_acceptances?: number | null;
   stock_limit?: number | null;
   unlimited_until_close?: boolean;
-  commission_type?: "per_completed_customer" | "percentage_of_trade" | "fixed_campaign_fee" | "manual_review_required";
+  commission_type?: "per_completed_customer" | "percentage_of_trade" | "fixed_campaign_fee" | "cpa_per_completed_customer" | "recurring_revenue_share" | "zero_percent_pilot" | "manual_review_required";
   commission_value?: number | null;
   commission_currency?: string;
   commission_terms_version?: string;

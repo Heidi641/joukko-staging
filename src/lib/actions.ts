@@ -111,15 +111,28 @@ export async function createCompanyProfileAction(formData: FormData) {
 
   if (!companyName || !businessId || !contactEmail) redirect("/yritys?virhe=yritystiedot");
 
-  await supabase.from("companies").insert({
+  const { data: company } = await supabase.from("companies").insert({
     owner_id: user.id,
     name: companyName,
     business_id: businessId,
     email: contactEmail,
     contact_email: contactEmail,
     customer_service_contact: value(formData, "customer_service_contact") || contactEmail,
-    verification_status: "pending_verification"
-  });
+    verification_status: "pending_verification",
+    commission_agreement_status: "pending_admin_review",
+    billing_setup_status: "not_ready",
+    admin_review_status: "pending"
+  }).select("id").single();
+
+  if (company?.id) {
+    await supabase.from("reports").insert({
+      reporter_id: user.id,
+      entity_type: "company",
+      entity_id: company.id,
+      reason: "Uusi yritys odottaa admin-tarkistusta: varmennus, palkkiomalli ja laskutusportti ennen tarjousten julkaisua.",
+      status: "open"
+    });
+  }
 
   revalidatePath("/yritys");
   redirect("/yritys?yritysprofiili=luotu");
@@ -187,9 +200,11 @@ export async function createOfferAction(formData: FormData) {
 
   const { data: company } = await supabase
     .from("companies")
-    .select("id, name, business_id, contact_email, email, customer_service_contact, home_country, verification_status")
+    .select("id, name, business_id, contact_email, email, customer_service_contact, home_country, verification_status, commission_agreement_status, billing_setup_status")
     .eq("owner_id", user.id)
     .eq("verification_status", "verified")
+    .eq("commission_agreement_status", "accepted")
+    .eq("billing_setup_status", "ready")
     .limit(1)
     .single();
   if (!company) redirect("/yritys?virhe=yritys");

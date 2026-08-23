@@ -77,6 +77,7 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
       {offers.length > 1 && (
         <section className="panel compare">
           <h2>Vertaa tarjouksia</h2>
+          <p className="muted">Hinta näytetään ensin. Jos tuote, toimitus, sopimuskausi tai muu olennainen sisältö poikkeaa, tarjoukset eivät välttämättä ole suoraan vertailukelpoisia.</p>
           <div className="compare-table">
             <div></div>
             {offers.map((offer) => <strong key={offer.id}>{offer.brand ?? offer.title}</strong>)}

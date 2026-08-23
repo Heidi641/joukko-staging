@@ -52,13 +52,13 @@ export default async function CompanyPage() {
           <label>Y-tunnus tai yritystunniste<input name="business_id" required /></label>
           <label>Yhteyssähköposti<input name="contact_email" type="email" required /></label>
           <label>Asiakaspalvelun yhteystieto<input name="customer_service_contact" /></label>
-          <div className="notice">Tarjousten julkaisu vaatii adminin verified-varmennuksen. Varmennusmerkkiä ei näytetä ennen oikeaa varmennusta.</div>
+          <div className="notice">Tarjousten julkaisu vaatii adminin verified-varmennuksen, hyväksytyn palkkiomallin ja valmiin laskutusportin. Uusi yritys näkyy adminin tarkistuslistalla.</div>
           <button className="button" type="submit">Luo yritysprofiili</button>
         </form>
 
         <form className="panel" action={createOfferAction}>
           <h2>Tee tarjous kysyntään</h2>
-          <p className="muted">Tarjouksen julkaisu vaatii verified-yrityksen. Kun tarjous julkaistaan ja kuluttajat alkavat sitoutua siihen, olennaiset kentät lukitaan.</p>
+          <p className="muted">Tarjouksen julkaisu vaatii verified-yrityksen, hyväksytyn commission agreementin ja billing setup ready -tilan. Kun tarjous julkaistaan ja kuluttajat alkavat sitoutua siihen, olennaiset kentät lukitaan.</p>
           <label>Joukko<select name="group_id">{groups.map((group) => <option value={group.id} key={group.id}>{group.name} · {group.member_count.toLocaleString("fi-FI")} kiinnostunutta · {group.group_type}</option>)}</select></label>
           <label>Tarjottava tuote tai palvelu<input name="product_or_service" required placeholder="Täsmällinen tuote/palvelu" /></label>
           <div className="grid two compact">
@@ -109,8 +109,10 @@ export default async function CompanyPage() {
           <label>JOUKKO-palkkiomalli
             <select name="commission_type" defaultValue="percentage_of_trade">
               <option value="percentage_of_trade">% completed kaupasta</option>
-              <option value="per_completed_customer">€/completed asiakas</option>
               <option value="fixed_campaign_fee">Kiinteä kampanjapalkkio</option>
+              <option value="cpa_per_completed_customer">CPA / completed asiakas</option>
+              <option value="recurring_revenue_share">Recurring revenue share</option>
+              <option value="zero_percent_pilot">0 % pilotti</option>
               <option value="manual_review_required">Admin määrittää myöhemmin</option>
             </select>
           </label>
@@ -120,8 +122,8 @@ export default async function CompanyPage() {
           </div>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
-          <label className="check"><input type="checkbox" required /> Hyväksyn JOUKON palkkioehdot tälle kampanjalle. Live-Stripeä ei kytketä ilman erillistä hyväksyntää.</label>
-          <button className="button" type="submit">Julkaise staging-tarjous</button>
+          <label className="check"><input type="checkbox" required /> Hyväksyn JOUKON palkkioehdot tälle kampanjalle. Palkkio veloitetaan yritykseltä, ei asiakkaalta. Live-Stripeä ei kytketä ilman erillistä hyväksyntää.</label>
+          <button className="button" type="submit">Julkaise tarjous</button>
         </form>
 
         <aside className="panel">
@@ -129,7 +131,7 @@ export default async function CompanyPage() {
           <div className="facts">
             <div><dt>Tila</dt><dd>verified vaaditaan</dd></div>
             <div><dt>Seuraava</dt><dd>pending_verification</dd></div>
-            <div><dt>Julkaisu</dt><dd>verified</dd></div>
+            <div><dt>Julkaisu</dt><dd>verified + commission + billing</dd></div>
           </div>
           <h2>Aggregoitu kysyntä</h2>
           <p className="muted">Yritys näkee vain osallistujamäärät, aluejakaumat ja sopimusten päättymisjakaumat. Ei nimiä, sähköposteja tai tarkkoja osoitteita.</p>

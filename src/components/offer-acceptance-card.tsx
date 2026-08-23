@@ -50,7 +50,7 @@ export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; ac
         <p>{offer.terms_text ?? offer.terms_url ?? offer.terms_document_reference ?? offer.terms}</p>
       </details>
       {offer.fulfillment_note && <p className="muted">{offer.fulfillment_note}</p>}
-      <p className="muted">JOUKKO toimii alustana ja kysynnän kokoajana. Myyjä vastaa omasta tarjouksestaan, myyntiehdoistaan ja toimituksesta.</p>
+      <p className="muted">JOUKKO toimii välittävänä markkinapaikkana ja kysynnän kokoajana. Yrityksen varsinainen sopimus tehdään myyjän ja asiakkaan välillä. JOUKON palkkiota ei peritä asiakkaalta.</p>
       <form action={acceptOfferAction}>
         <input type="hidden" name="group_id" value={offer.group_id} />
         <input type="hidden" name="offer_id" value={offer.id} />
