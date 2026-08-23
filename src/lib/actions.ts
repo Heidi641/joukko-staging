@@ -142,9 +142,14 @@ export async function createOfferAction(formData: FormData) {
   const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single();
   if (profile?.role !== "company") redirect("/yritys?virhe=rooli");
 
-  const { data: company } = await supabase.from("companies").select("id, name, business_id, contact_email, email, customer_service_contact, home_country, verification_status").eq("owner_id", user.id).limit(1).single();
+  const { data: company } = await supabase
+    .from("companies")
+    .select("id, name, business_id, contact_email, email, customer_service_contact, home_country, verification_status")
+    .eq("owner_id", user.id)
+    .eq("verification_status", "verified")
+    .limit(1)
+    .single();
   if (!company) redirect("/yritys?virhe=yritys");
-  if (company.verification_status !== "verified") redirect("/yritys?virhe=varmennus");
 
   const groupId = value(formData, "group_id");
   const { data: group } = await supabase.from("groups").select("id, group_type, brand, model_code").eq("id", groupId).single();
