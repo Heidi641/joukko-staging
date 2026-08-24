@@ -2,19 +2,28 @@ name: JOUKKO Playwright review
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
 
 permissions:
   contents: read
 
+env:
+  PLAYWRIGHT_BASE_URL: https://joukko-production-preview.onrender.com
+  PLAYWRIGHT_TEST_BASE_URL: https://joukko-production-preview.onrender.com
+  PLAYWRIGHT_HTML_OPEN: never
+
 jobs:
   review:
+    name: Full browser and release review
     runs-on: ubuntu-latest
     timeout-minutes: 30
-    env:
-      PLAYWRIGHT_BASE_URL: https://joukko-production-preview.onrender.com
-      PLAYWRIGHT_HTML_OPEN: never
 
     steps:
       - name: Checkout
@@ -25,20 +34,28 @@ jobs:
         with:
           node-version: 20
 
+      - name: Confirm workflow started
+        run: echo "JOUKKO review started for $GITHUB_SHA"
+
       - name: Install browser review tools
         run: |
           npm install --no-save @playwright/test@1.55.0 @axe-core/playwright@4.10.2
           npx playwright install --with-deps chromium
 
-      - name: Static AI safety checks
+      - name: Static AI and secret safety checks
         shell: bash
         run: |
           set -e
           grep -q 'if (!aiIsUsable()) return mockAiProvider' src/lib/ai/service.ts
           grep -q 'if (settings.provider === "openai-compatible" && !process.env.OPENAI_API_KEY) return false' src/lib/ai/settings.ts
-          ! grep -R "NEXT_PUBLIC_OPENAI_API_KEY" src .env.example || (echo "OPENAI key must never be public" && exit 1)
-          ! grep -R "sk_live_\|sk_test_" src || (echo "Stripe-like secret found in source" && exit 1)
-          echo "AI fallback and secret exposure checks passed"
+          if grep -R "NEXT_PUBLIC_OPENAI_API_KEY" src .env.example; then
+            echo "OPENAI key must never be public"
+            exit 1
+          fi
+          if grep -R "sk_live_\|sk_test_" src; then
+            echo "Secret-like Stripe key found in source"
+            exit 1
+          fi
 
       - name: Wait for JOUKKO preview
         shell: bash
@@ -56,10 +73,8 @@ jobs:
           echo "Preview did not become ready in time"
           exit 1
 
-      - name: Run browser, UX, auth and hardening checks
+      - name: Run browser, UX, auth, accessibility and hardening checks
         run: npx playwright test tests/joukko-ux.spec.ts tests/joukko-hardening.spec.ts --reporter=line,html
-        env:
-          PLAYWRIGHT_TEST_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
 
       - name: Upload Playwright report and screenshots
         if: always()
