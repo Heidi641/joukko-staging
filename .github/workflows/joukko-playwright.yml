@@ -11,7 +11,7 @@ permissions:
 jobs:
   review:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     env:
       PLAYWRIGHT_BASE_URL: https://joukko-production-preview.onrender.com
       PLAYWRIGHT_HTML_OPEN: never
@@ -25,29 +25,39 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Playwright for this CI run
+      - name: Install browser review tools
         run: |
-          npm install --no-save @playwright/test@1.55.0
+          npm install --no-save @playwright/test@1.55.0 @axe-core/playwright@4.10.2
           npx playwright install --with-deps chromium
+
+      - name: Static AI safety checks
+        shell: bash
+        run: |
+          set -e
+          grep -q 'if (!aiIsUsable()) return mockAiProvider' src/lib/ai/service.ts
+          grep -q 'if (settings.provider === "openai-compatible" && !process.env.OPENAI_API_KEY) return false' src/lib/ai/settings.ts
+          ! grep -R "NEXT_PUBLIC_OPENAI_API_KEY" src .env.example || (echo "OPENAI key must never be public" && exit 1)
+          ! grep -R "sk_live_\|sk_test_" src || (echo "Stripe-like secret found in source" && exit 1)
+          echo "AI fallback and secret exposure checks passed"
 
       - name: Wait for JOUKKO preview
         shell: bash
         run: |
           set -e
-          for i in {1..30}; do
+          for i in {1..36}; do
             code=$(curl -L -s -o /tmp/joukko.html -w "%{http_code}" "$PLAYWRIGHT_BASE_URL/testaa" || true)
             if [ "$code" = "200" ] && grep -qi "testaajan sivu" /tmp/joukko.html; then
               echo "JOUKKO preview is ready"
               exit 0
             fi
-            echo "Waiting for preview... attempt $i/30 (HTTP $code)"
+            echo "Waiting for preview... attempt $i/36 (HTTP $code)"
             sleep 10
           done
           echo "Preview did not become ready in time"
           exit 1
 
-      - name: Run browser and UX checks
-        run: npx playwright test tests/joukko-ux.spec.ts --reporter=line,html
+      - name: Run browser, UX, auth and hardening checks
+        run: npx playwright test tests/joukko-ux.spec.ts tests/joukko-hardening.spec.ts --reporter=line,html
         env:
           PLAYWRIGHT_TEST_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
 
