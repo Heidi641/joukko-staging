@@ -1,0 +1,63 @@
+name: JOUKKO Playwright review
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      PLAYWRIGHT_BASE_URL: https://joukko-production-preview.onrender.com
+      PLAYWRIGHT_HTML_OPEN: never
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Playwright for this CI run
+        run: |
+          npm install --no-save @playwright/test@1.55.0
+          npx playwright install --with-deps chromium
+
+      - name: Wait for JOUKKO preview
+        shell: bash
+        run: |
+          set -e
+          for i in {1..30}; do
+            code=$(curl -L -s -o /tmp/joukko.html -w "%{http_code}" "$PLAYWRIGHT_BASE_URL/testaa" || true)
+            if [ "$code" = "200" ] && grep -qi "testaajan sivu" /tmp/joukko.html; then
+              echo "JOUKKO preview is ready"
+              exit 0
+            fi
+            echo "Waiting for preview... attempt $i/30 (HTTP $code)"
+            sleep 10
+          done
+          echo "Preview did not become ready in time"
+          exit 1
+
+      - name: Run browser and UX checks
+        run: npx playwright test tests/joukko-ux.spec.ts --reporter=line,html
+        env:
+          PLAYWRIGHT_TEST_BASE_URL: ${{ env.PLAYWRIGHT_BASE_URL }}
+
+      - name: Upload Playwright report and screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: joukko-playwright-review
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: warn
+          retention-days: 14
