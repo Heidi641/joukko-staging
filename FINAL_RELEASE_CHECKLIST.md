@@ -38,7 +38,19 @@ JOUKKOA ei merkitä julkaisuvalmiiksi ennen kuin koko tämä tarkastus on käyty
 - Salaisuuksia, API-avaimia tai palvelinympäristön tietoja ei vuoda selaimeen tai repoon.
 - Virheilmoitukset eivät paljasta arkaluonteisia tietoja.
 
-## 6. Käytettävyys — ihmisen näkökulma
+## 6. AI-tarkastus
+- JOUKKO toimii myös silloin, kun AI on pois päältä.
+- Jos AI-avain puuttuu tai AI-palvelu epäonnistuu, turvallinen mock/fallback toimii eikä JOUKKO kaadu.
+- AI ei muuta yrityksen tarjoushintaa, sopimusehtoja tai volyymiportaita omin päin.
+- AI ei hyväksy tarjousta, sitoutumista tai kauppaa käyttäjän puolesta.
+- AI:lle ei lähetetä tarpeettomia henkilötietoja.
+- OPENAI/API-avaimia ei koskaan julkaista NEXT_PUBLIC-muuttujina eikä selainkoodissa.
+- Rate limit, käyttäjäkohtainen raja ja kustannusrajat testataan.
+- AI-virheestä jää hallittu virhetila/loki, mutta käyttäjän alkuperäinen aineisto säilyy.
+- Sama sisältö ei aiheuta turhia uusia AI-kutsuja, jos input_hash/cache on käytössä.
+- AI:n tekemä analyysi merkitään AI-avusteiseksi eikä sitä esitetä varmana päätöksenä.
+
+## 7. Käytettävyys — ihmisen näkökulma
 - Käyttäjä ymmärtää etusivulta heti mikä JOUKKO on ja mitä tehdä seuraavaksi.
 - Tärkeät napit löytyvät ilman etsimistä.
 - Tekstit ovat ymmärrettävää suomea eikä mukana ole kehittäjä-/testitekstiä väärissä paikoissa.
@@ -47,17 +59,19 @@ JOUKKOA ei merkitä julkaisuvalmiiksi ennen kuin koko tämä tarkastus on käyty
 - Mobiilissa ei ole vaakavieritystä, päällekkäisiä elementtejä tai liian pieniä painikkeita.
 - Kartat, kuvat, lomakkeet ja pitkät tekstit toimivat puhelimella.
 
-## 7. Automaattinen selaintarkastus
+## 8. Automaattinen selaintarkastus
 - Playwright ajaa desktop- ja mobiilitarkastukset.
 - Julkiset sivut avautuvat ilman selainvirheitä.
 - Suojatut sivut eivät avaudu kirjautumattomalle.
 - /testi ja /testaajat ohjautuvat /testaa-sivulle.
+- 404-, linkki-, lomake-, responsiivisuus-, saavutettavuus- ja perus-tietoturvatarkastukset ajetaan.
 - Kuvakaappaukset tarkastetaan myös visuaalisesti, ei vain testituloksen perusteella.
 
-## 8. Julkaisun viimeinen portti
+## 9. Julkaisun viimeinen portti
 - Build/deploy onnistuu Renderissä.
 - Ei avoimia kriittisiä tai korkeita bugeja.
 - Kuluttajan ja yrityksen ydintoiminnot testattu alusta loppuun.
+- AI-tarkastus on PASS tai AI pidetään turvallisesti pois päältä julkaisuun asti.
 - Maksut pidetään testitilassa, kunnes erillinen live-hyväksyntä annetaan.
 - Tuotantoa ei avata automaattisesti tämän tarkastuksen seurauksena.
 
