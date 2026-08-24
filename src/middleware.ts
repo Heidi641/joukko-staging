@@ -2,7 +2,18 @@ import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
-const privateRoutes = ["/admin", "/minun", "/perusta"];
+// Staging is intentionally locked down: visitors may only see the public
+// introduction, authentication, test instructions and legal/contact pages.
+// Every actual JOUKKO feature requires an authenticated user.
+const privateRoutes = [
+  "/admin",
+  "/joukot",
+  "/minun",
+  "/perusta",
+  "/tarjoukset",
+  "/tekoaly",
+  "/yritys"
+];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
