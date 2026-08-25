@@ -62,7 +62,7 @@ for (const profile of [
     test("testisivu sisältää testaajan tärkeät polut", async ({ page }) => {
       await page.goto(target("/testaa"), { waitUntil: "networkidle" });
       await expect(page.getByRole("heading", { name: /testaajan sivu/i })).toBeVisible();
-      await expect(page.getByRole("link", { name: /rekisteröidy/i })).toBeVisible();
+      await expect(page.locator('a[href="/rekisteroidy"]').filter({ hasText: /^Rekisteröidy$/ }).first()).toBeVisible();
       await expect(page.getByRole("link", { name: /kirjaudu sisään/i })).toBeVisible();
       await expect(page.getByText(/selaa joukkoja/i)).toBeVisible();
       await expect(page.getByText(/perusta oma joukko/i)).toBeVisible();
