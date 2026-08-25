@@ -12,7 +12,14 @@ export function ProgressBar({ count, target }: { count: number; target?: number 
   const progress = nextTarget(count, target);
   return (
     <>
-      <div className="bar" aria-label={`Edistyminen ${progress.percent} prosenttia`}>
+      <div
+        className="bar"
+        role="progressbar"
+        aria-label="Joukon eteneminen"
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-valuenow={progress.percent}
+      >
         <span style={{ width: `${progress.percent}%` }} />
       </div>
       <p className="muted">{progress.left.toLocaleString("fi-FI")} lisää → {progress.target.toLocaleString("fi-FI")}</p>
