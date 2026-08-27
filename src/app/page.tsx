@@ -2,30 +2,12 @@ import Link from "next/link";
 import { GroupCard } from "@/components/group-card";
 import { growingCategoryLabels } from "@/lib/catalog";
 import { findSimilarGroups, getCategories, getGroups, getMetrics } from "@/lib/data";
-import type { Group } from "@/lib/types";
-
-function groupSection(title: string, groups: Group[], slugIncludes: string[]) {
-  const selected = groups.filter((group) => slugIncludes.some((slug) => group.category_slug.includes(slug))).slice(0, 4);
-  if (selected.length === 0) return null;
-
-  return (
-    <>
-      <section className="section-head">
-        <h2>{title}</h2>
-        <Link className="button secondary" href="/joukot">Näytä lisää</Link>
-      </section>
-      <section className="grid">
-        {selected.map((group) => <GroupCard group={group} key={group.id} />)}
-      </section>
-    </>
-  );
-}
 
 export default async function HomePage({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const params = await searchParams;
   const query = params.q ?? "";
   const [metrics, categories, matches, groups] = await Promise.all([getMetrics(), getCategories(), findSimilarGroups(query), getGroups()]);
-  const featuredGroups = (query && matches.length > 0 ? matches : groups).slice(0, 6);
+  const featuredGroups = groups.slice(0, 6);
 
   return (
     <>
@@ -73,25 +55,22 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </>
       )}
 
-      <section className="section-head">
-        <div>
-          <h2>Suosituimmat nyt</h2>
-          <p className="muted">Näkyvyys perustuu oikeaan dataan tai adminin aloitusjärjestykseen. Nollatilanteessa emme feikkaa suosiota.</p>
-        </div>
-        <Link className="button secondary" href="/joukot">Näytä kaikki</Link>
-      </section>
+      {!query && (
+        <>
+          <section className="section-head">
+            <div>
+              <h2>Suosituimmat nyt</h2>
+              <p className="muted">Näkyvyys perustuu oikeaan dataan tai adminin aloitusjärjestykseen. Nollatilanteessa emme feikkaa suosiota.</p>
+            </div>
+            <Link className="button secondary" href="/joukot">Näytä kaikki</Link>
+          </section>
 
-      <section className="grid">
-        {featuredGroups.map((group) => <GroupCard group={group} key={group.id} />)}
-        {featuredGroups.length === 0 && <div className="empty">Ei Joukkoja vielä. Perusta ensimmäinen Joukko.</div>}
-      </section>
-
-      {groupSection("Arjen sopimukset", groups, ["sopimukset"])}
-      {groupSection("Koti & energia", groups, ["koti-energia"])}
-      {groupSection("Elektroniikka & kodinkoneet", groups, ["elektroniikka", "ostokset"])}
-      {groupSection("Autoilu", groups, ["autoilu", "liikkuminen"])}
-      {groupSection("Matkailu & vapaa-aika", groups, ["matkailu", "matkat"])}
-      {groupSection("Palvelut", groups, ["palvelut"])}
+          <section className="grid">
+            {featuredGroups.map((group) => <GroupCard group={group} key={group.id} />)}
+            {featuredGroups.length === 0 && <div className="empty">Ei Joukkoja vielä. Perusta ensimmäinen Joukko.</div>}
+          </section>
+        </>
+      )}
 
       <section className="section-head">
         <div>
