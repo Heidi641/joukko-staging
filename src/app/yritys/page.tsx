@@ -1,6 +1,15 @@
 import { GroupCard } from "@/components/group-card";
 import { createCompanyProfileAction, createOfferAction } from "@/lib/actions";
 import { getCategories, getGroups } from "@/lib/data";
+import { comparisonTemplate } from "@/lib/comparison-templates";
+
+function commissionLabel(model?: string, amount?: number | null) {
+  if (model === "percentage_of_trade") return `${amount ?? 0} % toteutuneen kaupan arvosta`;
+  if (model === "cpa_per_completed_customer" || model === "per_completed_customer") return `${amount ?? 0} € / toteutunut asiakas`;
+  if (model === "fixed_campaign_fee") return `${amount ?? 0} € / kampanja`;
+  if (model === "zero_percent_pilot") return "0 € (pilotti)";
+  return "Adminin vahvistettava ennen tarjousta";
+}
 
 export default async function CompanyPage() {
   const [groups, categories] = await Promise.all([getGroups(), getCategories()]);
@@ -104,25 +113,28 @@ export default async function CompanyPage() {
           <label>Takuu<input name="warranty_terms" placeholder="Esim. 24 kk" /></label>
           <label>Tarjous päättyy<input name="valid_until" type="date" /></label>
           <label>Vastaako tarjous Joukon olennaista tarvetta?<select name="requirement_match"><option value="company_confirmed">Kyllä, yritys vahvistaa</option><option value="needs_review">Tarvitsee admin-tarkistuksen</option></select></label>
+          <fieldset>
+            <legend>Kategoriakohtaiset vertailutiedot</legend>
+            <p className="muted">Täytä valitsemasi Joukon kategoriaa vastaava osio. Nämä tiedot näytetään asiakkaille rinnakkain.</p>
+            {categories.map((category) => (
+              <details key={category.id}>
+                <summary>{category.name}</summary>
+                {comparisonTemplate(category.slug).map((field) => (
+                  <label key={`${category.slug}-${field.key}`}>{field.label}<input name={`comparison_${field.key}`} placeholder={field.placeholder} /></label>
+                ))}
+              </details>
+            ))}
+          </fieldset>
           <label>Myyjän myyntiehdot tekstinä<textarea name="terms_text" required placeholder="Yritys kirjoittaa omat ehtonsa. JOUKKO ei generoi ehtoja myyjän puolesta."></textarea></label>
           <label>Ehtoversio<input name="terms_version" placeholder="seller-terms-v1" /></label>
-          <label>JOUKKO-palkkiomalli
-            <select name="commission_type" defaultValue="percentage_of_trade">
-              <option value="percentage_of_trade">% completed kaupasta</option>
-              <option value="fixed_campaign_fee">Kiinteä kampanjapalkkio</option>
-              <option value="cpa_per_completed_customer">CPA / completed asiakas</option>
-              <option value="recurring_revenue_share">Recurring revenue share</option>
-              <option value="zero_percent_pilot">0 % pilotti</option>
-              <option value="manual_review_required">Admin määrittää myöhemmin</option>
-            </select>
-          </label>
-          <div className="grid two compact">
-            <label>Palkkioarvo<input name="commission_value" type="number" min="0" step="0.01" placeholder="3" /></label>
-            <label>Palkkioehtojen versio<input name="commission_terms_version" placeholder="commission-v1" /></label>
+          <div className="notice">
+            <strong>EkoYhteisön onnistumispalkkio määräytyy valitun Joukon kategoriasta:</strong>
+            {categories.map((category) => <div key={`${category.id}-fee`}>{category.name}: {commissionLabel(category.commission_model, category.commission_value)} · ehdot {category.commission_terms_version ?? "eko-category-v1"}</div>)}
+            <p>Palkkio syntyy vain migraatiossa määritellystä toteutuneesta kaupasta. Yritys ei voi muuttaa palkkiota tarjouslomakkeella.</p>
           </div>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
-          <label className="check"><input type="checkbox" required /> Hyväksyn JOUKON palkkioehdot tälle kampanjalle. Palkkio veloitetaan yritykseltä, ei asiakkaalta. Live-Stripeä ei kytketä ilman erillistä hyväksyntää.</label>
+          <label className="check"><input type="checkbox" name="accept_commission" required /> Hyväksyn yllä näytetyn, valitun kategorian EkoYhteisön onnistumispalkkion ja palkkioehdot tälle tarjoukselle. Palkkio veloitetaan yritykseltä, ei asiakkaalta. Live-Stripeä ei kytketä.</label>
           <button className="button" type="submit">Julkaise tarjous</button>
         </form>
 

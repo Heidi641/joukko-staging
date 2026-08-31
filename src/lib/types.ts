@@ -23,6 +23,9 @@ export type Category = {
   regulated: boolean;
   sort_order: number;
   participation_count: number;
+  commission_model?: Offer["commission_type"];
+  commission_value?: number | null;
+  commission_terms_version?: string;
 };
 
 export type Group = {

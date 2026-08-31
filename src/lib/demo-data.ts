@@ -1,12 +1,12 @@
 import type { Category, Group, Metrics, Offer } from "./types";
 
 export const categories: Category[] = [
-  { id: "cat-home", name: "Koti & energia", slug: "koti-energia", parent_id: null, icon: "⚡", country_code: "FI", active: true, regulated: true, sort_order: 1, participation_count: 1260 },
-  { id: "cat-money", name: "Raha", slug: "raha", parent_id: null, icon: "🏦", country_code: "FI", active: true, regulated: true, sort_order: 2, participation_count: 144 },
-  { id: "cat-contracts", name: "Sopimukset", slug: "sopimukset", parent_id: null, icon: "📱", country_code: "FI", active: true, regulated: true, sort_order: 3, participation_count: 380 },
-  { id: "cat-mobility", name: "Liikkuminen", slug: "liikkuminen", parent_id: null, icon: "🚗", country_code: "FI", active: true, regulated: false, sort_order: 4, participation_count: 612 },
-  { id: "cat-shopping", name: "Ostokset", slug: "ostokset", parent_id: null, icon: "🛒", country_code: "FI", active: true, regulated: false, sort_order: 5, participation_count: 499 },
-  { id: "cat-travel", name: "Matkat", slug: "matkat", parent_id: null, icon: "🏨", country_code: "FI", active: true, regulated: true, sort_order: 6, participation_count: 238 }
+  { id: "cat-home", name: "Koti & energia", slug: "koti-energia", parent_id: null, icon: "⚡", country_code: "FI", active: true, regulated: true, sort_order: 1, participation_count: 1260, commission_model: "percentage_of_trade", commission_value: 2.5, commission_terms_version: "eko-category-v1" },
+  { id: "cat-money", name: "Raha", slug: "raha", parent_id: null, icon: "🏦", country_code: "FI", active: true, regulated: true, sort_order: 2, participation_count: 144, commission_model: "manual_review_required", commission_value: null, commission_terms_version: "eko-category-v1" },
+  { id: "cat-contracts", name: "Sopimukset", slug: "sopimukset", parent_id: null, icon: "📱", country_code: "FI", active: true, regulated: true, sort_order: 3, participation_count: 380, commission_model: "cpa_per_completed_customer", commission_value: 12, commission_terms_version: "eko-category-v1" },
+  { id: "cat-mobility", name: "Liikkuminen", slug: "liikkuminen", parent_id: null, icon: "🚗", country_code: "FI", active: true, regulated: false, sort_order: 4, participation_count: 612, commission_model: "percentage_of_trade", commission_value: 4, commission_terms_version: "eko-category-v1" },
+  { id: "cat-shopping", name: "Ostokset", slug: "ostokset", parent_id: null, icon: "🛒", country_code: "FI", active: true, regulated: false, sort_order: 5, participation_count: 499, commission_model: "percentage_of_trade", commission_value: 5, commission_terms_version: "eko-category-v1" },
+  { id: "cat-travel", name: "Matkat", slug: "matkat", parent_id: null, icon: "🏨", country_code: "FI", active: true, regulated: true, sort_order: 6, participation_count: 238, commission_model: "cpa_per_completed_customer", commission_value: 8, commission_terms_version: "eko-category-v1" }
 ];
 
 export const groups: Group[] = [
