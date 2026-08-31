@@ -6,9 +6,13 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: joukko-staging-playwright-review
+  cancel-in-progress: false
+
 env:
-  PLAYWRIGHT_BASE_URL: https://joukko-production-preview.onrender.com
-  PLAYWRIGHT_TEST_BASE_URL: https://joukko-production-preview.onrender.com
+  PLAYWRIGHT_BASE_URL: https://joukko-staging.onrender.com
+  PLAYWRIGHT_TEST_BASE_URL: https://joukko-staging.onrender.com
   PLAYWRIGHT_HTML_OPEN: never
 
 jobs:
@@ -24,15 +28,20 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
 
       - name: Confirm workflow started
         run: echo "JOUKKO review started for $GITHUB_SHA"
 
       - name: Install browser review tools
         run: |
-          npm install --no-save @playwright/test@1.55.0 @axe-core/playwright@4.10.2
-          npx playwright install --with-deps chromium
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
 
       - name: Static AI and secret safety checks
         shell: bash
@@ -49,24 +58,8 @@ jobs:
             exit 1
           fi
 
-      - name: Wait for JOUKKO preview
-        shell: bash
-        run: |
-          set -e
-          for i in {1..36}; do
-            code=$(curl -L -s -o /tmp/joukko.html -w "%{http_code}" "$PLAYWRIGHT_BASE_URL/testaa" || true)
-            if [ "$code" = "200" ] && grep -qi "testaajan sivu" /tmp/joukko.html; then
-              echo "JOUKKO preview is ready"
-              exit 0
-            fi
-            echo "Waiting for preview... attempt $i/36 (HTTP $code)"
-            sleep 10
-          done
-          echo "Preview did not become ready in time"
-          exit 1
-
       - name: Run browser, UX, auth, accessibility and hardening checks
-        run: npx playwright test tests/joukko-ux.spec.ts tests/joukko-hardening.spec.ts --reporter=line,html
+        run: pnpm exec playwright test tests/joukko-ux.spec.ts tests/joukko-hardening.spec.ts --reporter=line,html
 
       - name: Upload Playwright report and screenshots
         if: always()
