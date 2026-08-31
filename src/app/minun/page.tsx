@@ -6,12 +6,13 @@ export default async function MyPage() {
   const { data: auth } = supabase ? await supabase.auth.getUser() : { data: { user: null } };
   if (!auth.user) redirect("/kirjaudu");
 
-  const [{ data: profile }, { data: memberships }, { data: acceptances }, { data: deals }] = supabase ? await Promise.all([
+  const [{ data: profile }, { data: memberships }, { data: acceptances }, { data: deals }, { data: notifications }] = supabase ? await Promise.all([
     supabase.from("profiles").select("*").eq("id", auth.user.id).single(),
     supabase.from("group_members").select("*, groups(name, member_count, offer_count)").eq("profile_id", auth.user.id),
     supabase.from("offer_acceptances").select("*, offers(group_id), companies(name)").eq("profile_id", auth.user.id),
-    supabase.from("deals").select("*, companies(name)").eq("user_id", auth.user.id).order("created_at", { ascending: false }).limit(10)
-  ]) : [{ data: null }, { data: [] }, { data: [] }, { data: [] }];
+    supabase.from("deals").select("*, companies(name)").eq("user_id", auth.user.id).order("created_at", { ascending: false }).limit(10),
+    supabase.from("notifications").select("*").eq("profile_id", auth.user.id).order("created_at", { ascending: false }).limit(10)
+  ]) : [{ data: null }, { data: [] }, { data: [] }, { data: [] }, { data: [] }];
 
   return (
     <>
@@ -48,6 +49,10 @@ export default async function MyPage() {
           <p className="muted">Hyväksynnän jälkeen syntyy oma deal. Yritys saa vain kaupan toteuttamiseen tarvittavat tiedot.</p>
         </article>
         <article className="card"><h3>Profiili</h3><p>Postinumero, kieli, maa, ilmoitusasetukset ja tietosuoja.</p></article>
+        <article className="card">
+          <h3>Ilmoitukset</h3><strong className="big">{notifications?.length ?? 0}</strong>
+          {notifications?.slice(0, 5).map((notification) => <p key={notification.id}><strong>{notification.title}</strong><br />{notification.body}</p>)}
+        </article>
       </section>
     </>
   );

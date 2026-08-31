@@ -32,6 +32,13 @@ async function currentUser() {
   return { supabase, user: data.user };
 }
 
+async function currentAdmin() {
+  const session = await currentUser();
+  const { data: profile } = await session.supabase.from("profiles").select("role").eq("id", session.user.id).single();
+  if (profile?.role !== "admin") redirect("/minun?virhe=ei_admin");
+  return session;
+}
+
 export async function signInAction(formData: FormData) {
   const supabase = await createSupabaseServerClient();
   if (!supabase) throw new Error("Supabase ei ole käytössä.");
@@ -212,13 +219,17 @@ export async function createOfferAction(formData: FormData) {
   const groupId = value(formData, "group_id");
   const { data: group } = await supabase
     .from("groups")
-    .select("id, group_type, brand, model_code, categories!inner(id, active, regulated)")
+    .select("id, group_type, brand, model_code, categories!inner(id, slug, active, regulated, commission_model, commission_value, commission_terms_version)")
     .eq("id", groupId)
     .single();
   if (!group) redirect("/yritys?virhe=joukko");
   const category = Array.isArray(group.categories) ? group.categories[0] : group.categories;
   if (!category?.active) redirect("/yritys?virhe=kategoria");
   if (isProductionRelease && category.regulated) redirect("/yritys?virhe=regulated");
+  if (formData.get("accept_commission") !== "on") redirect("/yritys?virhe=palkkio_hyvaksyttava");
+  if (!category.commission_model || category.commission_model === "manual_review_required" || category.commission_value == null) {
+    redirect("/yritys?virhe=palkkio_puuttuu");
+  }
 
   if (group.group_type === "exact") {
     const exactBrand = String(group.brand ?? "").trim().toLowerCase();
@@ -293,10 +304,10 @@ export async function createOfferAction(formData: FormData) {
       minimum_participants: numberValue(formData, "minimum_participants", 1),
       contract_length: value(formData, "contract_length") || null,
       vat_status: value(formData, "vat_status") || "Sisältää ALV:n",
-      commission_type: value(formData, "commission_type") || "manual_review_required",
-      commission_value: numberValue(formData, "commission_value") || null,
+      commission_type: category.commission_model,
+      commission_value: category.commission_value,
       commission_currency: "EUR",
-      commission_terms_version: value(formData, "commission_terms_version") || "commission-terms-v1-LEGAL_REVIEW_REQUIRED",
+      commission_terms_version: category.commission_terms_version || "category-commission-v1",
       commission_terms_accepted_by_company_at: new Date().toISOString(),
       terms_type: "text",
       terms_text: termsText,
@@ -308,10 +319,11 @@ export async function createOfferAction(formData: FormData) {
       published_at: new Date().toISOString(),
       requirement_match: value(formData, "requirement_match") || "company_confirmed",
       category_match: value(formData, "category_match") || "company_confirmed",
-      comparison_fields: {
-        warranty: value(formData, "warranty_terms"),
-        availability: value(formData, "availability")
-      },
+      comparison_fields: Object.fromEntries(
+        [...formData.entries()]
+          .filter(([key, entry]) => key.startsWith("comparison_") && String(entry).trim().length > 0)
+          .map(([key, entry]) => [key.slice("comparison_".length), String(entry).trim()])
+      ),
       public_company_name: company.name,
       public_company_business_id: company.business_id,
       public_company_contact: company.customer_service_contact || company.contact_email || company.email,
@@ -405,7 +417,31 @@ export async function acceptOfferAction(formData: FormData) {
 }
 
 export async function approveGroupAction(formData: FormData) {
-  const { supabase } = await currentUser();
+  const { supabase } = await currentAdmin();
   await supabase.from("groups").update({ status: "active" }).eq("id", value(formData, "group_id"));
+  revalidatePath("/admin");
+}
+
+export async function selectWinningOfferAction(formData: FormData) {
+  const { supabase } = await currentAdmin();
+  const groupId = value(formData, "group_id");
+  const offerId = value(formData, "offer_id");
+  const { error } = await supabase.rpc("finalize_offer_competition", { p_group_id: groupId, p_winning_offer_id: offerId });
+  if (error) redirect("/admin?virhe=kilpailun_paattaminen");
+  revalidatePath("/admin");
+  revalidatePath(`/joukot/${groupId}`);
+}
+
+export async function approveCompanyAction(formData: FormData) {
+  const { supabase } = await currentAdmin();
+  await supabase.from("companies").update({
+    verification_status: "verified",
+    commission_agreement_status: "accepted",
+    commission_agreement_accepted_at: new Date().toISOString(),
+    billing_setup_status: "ready",
+    billing_setup_ready_at: new Date().toISOString(),
+    admin_review_status: "approved",
+    admin_review_note: value(formData, "admin_review_note") || "Staging-hyväksyntä; live Stripe ei ole käytössä."
+  }).eq("id", value(formData, "company_id"));
   revalidatePath("/admin");
 }
