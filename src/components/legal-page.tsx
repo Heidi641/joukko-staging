@@ -7,6 +7,9 @@ export function LegalPage({ document }: { document: LegalDocument }) {
         <div>
           <h1>{document.title}</h1>
           <p>Versio {document.version} · voimaantulo {document.effectiveDate} · päivitetty {document.updatedAt}</p>
+          {document.version.includes("draft") ? (
+            <p><strong>Luonnos:</strong> ehdot eivät ole voimassa ennen palveluntarjoajan tietojen täydentämistä ja juridista tarkistusta.</p>
+          ) : null}
         </div>
       </section>
       <section className="grid two">
