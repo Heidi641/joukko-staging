@@ -16,6 +16,36 @@ const privateRoutes = [
 ];
 
 export async function middleware(request: NextRequest) {
+  const previewToken = process.env.PREVIEW_ACCESS_TOKEN;
+
+  if (previewToken && request.cookies.get("joukko_preview_access")?.value !== previewToken) {
+    if (request.nextUrl.searchParams.get("preview_access") === previewToken) {
+      const cleanUrl = request.nextUrl.clone();
+      cleanUrl.searchParams.delete("preview_access");
+      const accessResponse = NextResponse.redirect(cleanUrl);
+      accessResponse.cookies.set("joukko_preview_access", previewToken, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "strict",
+        maxAge: 60 * 60 * 24 * 14,
+        path: "/"
+      });
+      accessResponse.headers.set("Cache-Control", "no-store");
+      accessResponse.headers.set("Referrer-Policy", "no-referrer");
+      accessResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
+      return accessResponse;
+    }
+
+    return new NextResponse("Sivua ei löytynyt.", {
+      status: 404,
+      headers: {
+        "Cache-Control": "no-store",
+        "Referrer-Policy": "no-referrer",
+        "X-Robots-Tag": "noindex, nofollow"
+      }
+    });
+  }
+
   let response = NextResponse.next({ request });
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
