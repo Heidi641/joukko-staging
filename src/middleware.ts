@@ -17,25 +17,9 @@ const privateRoutes = [
 
 export async function middleware(request: NextRequest) {
   const previewToken = process.env.PREVIEW_ACCESS_TOKEN;
+  const previewAccessFromLink = request.nextUrl.searchParams.get("preview_access") === previewToken;
 
-  if (previewToken && request.cookies.get("joukko_preview_access")?.value !== previewToken) {
-    if (request.nextUrl.searchParams.get("preview_access") === previewToken) {
-      const cleanUrl = request.nextUrl.clone();
-      cleanUrl.searchParams.delete("preview_access");
-      const accessResponse = NextResponse.redirect(cleanUrl);
-      accessResponse.cookies.set("joukko_preview_access", previewToken, {
-        httpOnly: true,
-        secure: true,
-        sameSite: "strict",
-        maxAge: 60 * 60 * 24 * 14,
-        path: "/"
-      });
-      accessResponse.headers.set("Cache-Control", "no-store");
-      accessResponse.headers.set("Referrer-Policy", "no-referrer");
-      accessResponse.headers.set("X-Robots-Tag", "noindex, nofollow");
-      return accessResponse;
-    }
-
+  if (previewToken && request.cookies.get("joukko_preview_access")?.value !== previewToken && !previewAccessFromLink) {
     return new NextResponse("Sivua ei löytynyt.", {
       status: 404,
       headers: {
@@ -53,7 +37,7 @@ export async function middleware(request: NextRequest) {
   const isPrivateRoute = privateRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   if (!url || !anonKey) {
-    return isPrivateRoute ? redirectToLogin(request, pathname) : response;
+    return grantPreviewAccess(isPrivateRoute ? redirectToLogin(request, pathname) : response, previewToken, previewAccessFromLink);
   }
 
   const supabase = createServerClient(url, anonKey, {
@@ -72,9 +56,25 @@ export async function middleware(request: NextRequest) {
   const { data } = await supabase.auth.getUser();
 
   if (isPrivateRoute && !data.user) {
-    return redirectToLogin(request, pathname);
+    return grantPreviewAccess(redirectToLogin(request, pathname), previewToken, previewAccessFromLink);
   }
 
+  return grantPreviewAccess(response, previewToken, previewAccessFromLink);
+}
+
+function grantPreviewAccess(response: NextResponse, token: string | undefined, grantAccess: boolean) {
+  if (!token || !grantAccess) return response;
+
+  response.cookies.set("joukko_preview_access", token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 14,
+    path: "/"
+  });
+  response.headers.set("Cache-Control", "no-store");
+  response.headers.set("Referrer-Policy", "no-referrer");
+  response.headers.set("X-Robots-Tag", "noindex, nofollow");
   return response;
 }
 
