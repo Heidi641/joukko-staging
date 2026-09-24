@@ -2,6 +2,7 @@ import { GroupCard } from "@/components/group-card";
 import { createCompanyProfileAction, createOfferAction } from "@/lib/actions";
 import { getCategories, getGroups } from "@/lib/data";
 import { comparisonTemplate } from "@/lib/comparison-templates";
+import { launchPilots } from "@/lib/launch-pilots";
 
 function commissionLabel(model?: string, amount?: number | null) {
   if (model === "percentage_of_trade") return `${amount ?? 0} % toteutuneen kaupan arvosta`;
@@ -53,10 +54,23 @@ export default async function CompanyPage() {
         ))}
       </section>
 
+      <section className="panel">
+        <h2>Kilpailutuspakettien valmiit vaatimukset</h2>
+        <p>Seuraavat mallit ovat valmistelussa eivätkä oikeita myyntisopimuksia. Valitse Joukkoon aina sama tarkka tuote tai sama selkeästi rajattu palvelu. Poikkeavat tarjoukset erotetaan vertailussa.</p>
+        {launchPilots.map((pilot) => (
+          <details key={pilot.slug}>
+            <summary><strong>{pilot.name}</strong> – alustava yrityspalkkio {pilot.fee}</summary>
+            <h4>Vaatimukset</h4>
+            <ul>{pilot.specification.map((spec) => <li key={spec}>{spec}</li>)}</ul>
+            <h4>Vertailukriteerit</h4>
+            <ul>{pilot.compare.map((criterion) => <li key={criterion}>{criterion}</li>)}</ul>
+          </details>
+        ))}
+      </section>
       <section className="columns">
         <form className="panel" action={createCompanyProfileAction}>
           <h2>Tarjoa yrityksenä</h2>
-          <p className="muted">Tämä luo erillisen yritysprofiilin. Käyttäjätilisi voi edelleen toimia ostajana, eikä ostajan rooli muutu myyjäksi.</p>
+          <p className="muted">Tämä luo erillisen yritysprofiilin. Käyttäjätilisi voi edelleen toimia ostajana. Oikean tarjouksen saa tehdä vain yrityksen valtuuttama myyjä oman myyntialueensa ja yrityksen sopimusten mukaisesti.</p>
           <label>Yrityksen virallinen nimi<input name="company_name" required /></label>
           <label>Y-tunnus tai yritystunniste<input name="business_id" required /></label>
           <label>Yhteyssähköposti<input name="contact_email" type="email" required /></label>
@@ -77,7 +91,23 @@ export default async function CompanyPage() {
             <label>Saatavuus<input name="availability" placeholder="Varastossa / tilauksesta" /></label>
           </div>
           <label>Tarjousnimi<input name="title" required placeholder="Esim. Samsung 65 toimitettuna" /></label>
-          <label>Kuvaus<textarea name="description" required placeholder="Mitä tarjous sisältää?"></textarea></label>
+          <label>Kuvaus<textarea name="description" required placeholder="Selkokielinen kuvaus ostajalle"></textarea></label>
+          <fieldset className="choice">
+            <legend>Pakollinen yhteismitallinen kilpailutuspaketti</legend>
+            <p className="muted">Määrittele, mitä ostaja todella saa. Esimerkiksi talopaketti pitää verrata vain saman toimituslaajuuden talopakettiin ja puhelin täsmälleen samaan malliin ja muistimäärään.</p>
+            <label>Tarkka tuote tai palvelupaketti
+              <textarea name="package_specification" required placeholder="Malli, koko, muisti, asennus/urakan tarkka toimitusaste..."></textarea>
+            </label>
+            <label>Mitä ilmoitettuun hintaan sisältyy
+              <textarea name="scope_included" required placeholder="Kaikki pakolliset tuotteet, työt, verot ja toimitus..."></textarea>
+            </label>
+            <label>Mitä ilmoitettuun hintaan EI sisälly
+              <textarea name="scope_excluded" required placeholder="Tontti, maanrakennus, rahoitus, asennuksen lisätyöt... Jos ei rajauksia, kirjoita ei rajauksia."></textarea>
+            </label>
+            <label>Mikä on vertailun perusta?
+              <textarea name="comparison_basis" required placeholder="Sama malli ja kokonaishinta / sama urakan toimitusaste ja kokonaishinta / 12 kk liittymähinta..."></textarea>
+            </label>
+          </fieldset>
           <label>JOUKKO-hinta<input name="price" type="number" min="0" step="0.01" required placeholder="499" /></label>
           <label>Pakolliset lisäkulut<input name="mandatory_fees" type="number" min="0" step="0.01" placeholder="0" /></label>
           <label>Normaalihinta<input name="normal_price" type="number" min="0" step="0.01" placeholder="699" /></label>
@@ -125,16 +155,32 @@ export default async function CompanyPage() {
               </details>
             ))}
           </fieldset>
+          <div className="notice">
+            <strong>Myyjän vastuu:</strong> Yritys toimii kauppasopimuksen osapuolena omissa nimissään,
+            ottaa vastaan maksun ja vastaa tuotteesta tai palvelusta, toimituksesta, asennuksesta,
+            takuusta, lakisääteisestä virhevastuusta, kuluttajan soveltuvasta peruuttamisoikeudesta
+            sekä reklamaatioista. JOUKKO vastaa omista alustavelvoitteistaan.
+          </div>
           <label>Myyjän myyntiehdot tekstinä<textarea name="terms_text" required placeholder="Yritys kirjoittaa omat ehtonsa. JOUKKO ei generoi ehtoja myyjän puolesta."></textarea></label>
           <label>Ehtoversio<input name="terms_version" placeholder="seller-terms-v1" /></label>
           <div className="notice">
-            <strong>EkoYhteisön onnistumispalkkio määräytyy valitun Joukon kategoriasta:</strong>
-            {categories.map((category) => <div key={`${category.id}-fee`}>{category.name}: {commissionLabel(category.commission_model, category.commission_value)} · ehdot {category.commission_terms_version ?? "eko-category-v1"}</div>)}
-            <p>Palkkio syntyy vain migraatiossa määritellystä toteutuneesta kaupasta. Yritys ei voi muuttaa palkkiota tarjouslomakkeella.</p>
+            <strong>Jokaisella Joukolla on etukäteen hyväksyttävä palkkio.</strong>
+            <p>Kampanjakohtainen hyväksytty palkkio ohittaa kategorian oletushinnan. Prosentit lasketaan todistetusta verottomasta kauppahinnasta – ei automaattista 300 €:n kattoa. Kiinnostus ei synnytä provisiota. Palkkio laskutetaan erikseen yritykseltä, ei kuluttajalta; soveltuva ALV lisätään laskuun.</p>
+            {groups.slice(0, 30).map((group) => {
+              const category = categories.find((item) => item.id === group.category_id);
+              const model = group.commission_model_override ?? category?.commission_model;
+              const amount = group.commission_value_override ?? category?.commission_value;
+              const version = group.commission_terms_version_override ?? category?.commission_terms_version;
+              return <div key={group.id}>
+                <strong>{group.name}:</strong> {model && amount != null ? commissionLabel(model, amount) : "Edellyttää ylläpitäjän hyväksyntää"} · ehdot {version ?? "tarkistettavana"}
+              </div>;
+            })}
+            <p>Varmista palkkio valitsemallesi JOUKOLLE ennen tarjousta. Vahvistus tallennetaan tarjouksen ehtoversioon. Hyväksyttyä versiota ei muuteta jälkikäteen.</p>
+            <p>HUOM: Tämä on edelleen testipalvelu. Tuotteiden kaupankäynnin sopimusehdot ja palkkioiden laskutus on tarkistettava ennen oikeaa käyttöönottoa.</p>
           </div>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
-          <label className="check"><input type="checkbox" name="accept_commission" required /> Hyväksyn yllä näytetyn, valitun kategorian EkoYhteisön onnistumispalkkion ja palkkioehdot tälle tarjoukselle. Palkkio veloitetaan yritykseltä, ei asiakkaalta. Live-Stripeä ei kytketä.</label>
+          <label className="check"><input type="checkbox" name="accept_commission" required /> Hyväksyn valitsemani Joukon yllä näytetyn onnistumispalkkion, laskentapohjan ja juuri tähän tarjoukseen tallennettavan ehtoversion. Palkkio veloitetaan yritykseltä, ei asiakkaalta. Live-Stripeä ei kytketä.</label>
           <button className="button" type="submit">Julkaise tarjous</button>
         </form>
 

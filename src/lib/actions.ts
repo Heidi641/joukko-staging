@@ -219,15 +219,24 @@ export async function createOfferAction(formData: FormData) {
   const groupId = value(formData, "group_id");
   const { data: group } = await supabase
     .from("groups")
-    .select("id, group_type, brand, model_code, categories!inner(id, slug, active, regulated, commission_model, commission_value, commission_terms_version)")
+    .select("id, group_type, brand, model_code, status, commission_model_override, commission_value_override, commission_terms_version_override, categories!inner(id, slug, active, regulated, commission_model, commission_value, commission_terms_version)")
     .eq("id", groupId)
     .single();
   if (!group) redirect("/yritys?virhe=joukko");
   const category = Array.isArray(group.categories) ? group.categories[0] : group.categories;
   if (!category?.active) redirect("/yritys?virhe=kategoria");
+  if (group.status !== "active") redirect("/yritys?virhe=joukko_ei_aktiivinen");
   if (isProductionRelease && category.regulated) redirect("/yritys?virhe=regulated");
+  if (isProductionRelease && (!group.commission_model_override || group.commission_value_override == null || !group.commission_terms_version_override)) {
+    redirect("/yritys?virhe=joukon_palkkio_ei_hyvaksytty");
+  }
+  // A campaign may have an explicitly negotiated fee that takes precedence over
+  // its broader category. Both are protected by server-side DB triggers.
+  const commissionType = group.commission_model_override ?? category.commission_model;
+  const commissionValue = group.commission_value_override ?? category.commission_value;
+  const commissionTermsVersion = group.commission_terms_version_override ?? category.commission_terms_version;
   if (formData.get("accept_commission") !== "on") redirect("/yritys?virhe=palkkio_hyvaksyttava");
-  if (!category.commission_model || category.commission_model === "manual_review_required" || category.commission_value == null) {
+  if (!commissionType || commissionType === "manual_review_required" || commissionValue == null || !commissionTermsVersion) {
     redirect("/yritys?virhe=palkkio_puuttuu");
   }
 
@@ -267,6 +276,18 @@ export async function createOfferAction(formData: FormData) {
 
   if (error || !offer) redirect("/yritys?virhe=tarjous");
 
+  // Require a concrete, buyer-readable comparison package for every new offer,
+  // irrespective of its category. Specialized category fields remain optional
+  // until the exact pilot SKU has been approved by an administrator.
+  const packageSpec = value(formData, "package_specification");
+  const includedScope = value(formData, "scope_included");
+  const excludedScope = value(formData, "scope_excluded");
+  const comparisonBasis = value(formData, "comparison_basis");
+  if (!packageSpec || !includedScope || !excludedScope || !comparisonBasis
+    || !value(formData, "terms_text")) {
+    redirect("/yritys?virhe=paketti_tai_ehdot_puuttuvat");
+  }
+
   const price = numberValue(formData, "price");
   const fees = numberValue(formData, "mandatory_fees");
   const delivery = numberValue(formData, "delivery_price");
@@ -279,7 +300,13 @@ export async function createOfferAction(formData: FormData) {
       version: 1,
       product_or_service: value(formData, "product_or_service"),
       title: value(formData, "title"),
-      description: value(formData, "description"),
+      description: [
+        value(formData, "description"),
+        `Täsmällinen kilpailutuspaketti: ${packageSpec}`,
+        `Hintaan sisältyy: ${includedScope}`,
+        `Rajaukset / ei sisälly: ${excludedScope}`,
+        `Vertailuperuste: ${comparisonBasis}`
+      ].filter(Boolean).join("\n"),
       brand: value(formData, "brand") || null,
       model: value(formData, "model") || null,
       model_code: value(formData, "model_code") || null,
@@ -304,10 +331,10 @@ export async function createOfferAction(formData: FormData) {
       minimum_participants: numberValue(formData, "minimum_participants", 1),
       contract_length: value(formData, "contract_length") || null,
       vat_status: value(formData, "vat_status") || "Sisältää ALV:n",
-      commission_type: category.commission_model,
-      commission_value: category.commission_value,
+      commission_type: commissionType,
+      commission_value: commissionValue,
       commission_currency: "EUR",
-      commission_terms_version: category.commission_terms_version || "category-commission-v1",
+      commission_terms_version: commissionTermsVersion,
       commission_terms_accepted_by_company_at: new Date().toISOString(),
       terms_type: "text",
       terms_text: termsText,
@@ -319,11 +346,16 @@ export async function createOfferAction(formData: FormData) {
       published_at: new Date().toISOString(),
       requirement_match: value(formData, "requirement_match") || "company_confirmed",
       category_match: value(formData, "category_match") || "company_confirmed",
-      comparison_fields: Object.fromEntries(
+      comparison_fields: {
+        package_specification: packageSpec,
+        scope_included: includedScope,
+        scope_excluded: excludedScope,
+        comparison_basis: comparisonBasis,
+        ...Object.fromEntries(
         [...formData.entries()]
           .filter(([key, entry]) => key.startsWith("comparison_") && String(entry).trim().length > 0)
-          .map(([key, entry]) => [key.slice("comparison_".length), String(entry).trim()])
-      ),
+          .map(([key, entry]) => [key.slice("comparison_".length), String(entry).trim()]))
+      },
       public_company_name: company.name,
       public_company_business_id: company.business_id,
       public_company_contact: company.customer_service_contact || company.contact_email || company.email,
@@ -334,7 +366,7 @@ export async function createOfferAction(formData: FormData) {
     .single();
 
   if (version) {
-    const tierRows = (value(formData, "tiers") || "100=599\n500=559\n1000=529")
+    const tierRows = value(formData, "tiers")
       .split(/\r?\n/)
       .map((row) => row.split(/[=→]/).map((part) => part.trim()))
       .filter(([min, tierPrice]) => Number(min) > 0 && Number(tierPrice?.replace(",", ".")) > 0)
@@ -360,13 +392,22 @@ export async function acceptOfferAction(formData: FormData) {
 
   const { data: offerVersion } = await supabase
     .from("offer_versions")
-    .select("id, offer_id, valid_until, max_acceptances, stock_limit, unlimited_until_close, fulfillment_start_type, fulfillment_start_date, fulfillment_end_date, delivery_days_min, delivery_days_max, fulfillment_note, terms_version, offers!inner(status)")
+    .select("id, offer_id, product_or_service, price, mandatory_fees, delivery_price, total_price, minimum_participants, valid_until, max_acceptances, stock_limit, unlimited_until_close, fulfillment_start_type, fulfillment_start_date, fulfillment_end_date, delivery_days_min, delivery_days_max, fulfillment_note, terms_version, offers!inner(id, status, group_id, company_id)")
     .eq("id", offerVersionId)
     .single();
 
-  const joinedOffer = offerVersion?.offers as { status?: string } | { status?: string }[] | undefined;
-  const offerStatus = Array.isArray(joinedOffer) ? joinedOffer[0]?.status : joinedOffer?.status;
-  if (!offerVersion || !["active", "published"].includes(String(offerStatus))) redirect(`/joukot/${groupId}?virhe=tarjous_suljettu`);
+  const joinedOffer = offerVersion?.offers as { id?: string; status?: string; group_id?: string; company_id?: string } | { id?: string; status?: string; group_id?: string; company_id?: string }[] | undefined;
+  const sourceOffer = Array.isArray(joinedOffer) ? joinedOffer[0] : joinedOffer;
+  const offerStatus = sourceOffer?.status;
+  if (!offerVersion || !sourceOffer || !["active", "published"].includes(String(offerStatus))
+      || sourceOffer.id !== offerId || sourceOffer.group_id !== groupId || !sourceOffer.company_id) {
+    redirect(`/joukot/${groupId}?virhe=tarjous_suljettu`);
+  }
+  if (isProductionRelease) {
+    // Final legally binding seller checkout and end-to-end proof of compliant
+    // acceptance are not yet enabled. This is a hard release safety gate.
+    redirect(`/joukot/${groupId}?virhe=ostopolku_ei_julkaistu`);
+  }
 
   if (offerVersion.valid_until && new Date(`${offerVersion.valid_until}T23:59:59`) < new Date()) {
     await supabase.from("offers").update({ status: "closed_to_new", closed_at: new Date().toISOString() }).eq("id", offerId);
@@ -379,26 +420,42 @@ export async function acceptOfferAction(formData: FormData) {
     .eq("offer_version_id", offerVersionId)
     .in("status", ["accepted", "auto_improved", "confirmed", "completed"]);
 
+  // Price and seller identity MUST come from the verified database record.
+  // Hidden browser fields are untrusted and are never used as money/seller data.
+  const { data: eligibleTiers } = await supabase.from("offer_price_tiers")
+    .select("min_acceptances, price")
+    .eq("offer_version_id", offerVersionId)
+    .lte("min_acceptances", acceptedCount ?? 0)
+    .order("min_acceptances", { ascending: false })
+    .limit(1);
+  const tierBase = eligibleTiers?.[0] ? Number(eligibleTiers[0].price) : Number(offerVersion.price);
+  const calculatedTotal = Math.round(
+    (tierBase + Number(offerVersion.mandatory_fees ?? 0) + Number(offerVersion.delivery_price ?? 0)) * 100
+  ) / 100;
+  if (!Number.isFinite(calculatedTotal) || calculatedTotal <= 0) {
+    redirect(`/joukot/${groupId}?virhe=hinnantarkistus`);
+  }
+
   const capacity = offerVersion.unlimited_until_close ? null : (offerVersion.max_acceptances ?? offerVersion.stock_limit);
   if (capacity && (acceptedCount ?? 0) >= capacity) redirect(`/joukot/${groupId}?virhe=kapasiteetti_taynna`);
 
   if (formData.get("data_sharing_consent") !== "on") redirect(`/joukot/${groupId}?virhe=tietojenluovutus`);
 
-  await supabase.from("offer_acceptances").upsert({
+  const { error: acceptanceError } = await supabase.from("offer_acceptances").upsert({
     offer_id: offerId,
     offer_version_id: offerVersionId,
-    company_id: value(formData, "company_id"),
+    company_id: sourceOffer.company_id,
     profile_id: user.id,
-    accepted_price: numberValue(formData, "accepted_price"),
-    current_price: numberValue(formData, "current_price"),
-    maximum_accepted_price: numberValue(formData, "accepted_price"),
-    terms_version: value(formData, "terms_version"),
+    accepted_price: calculatedTotal,
+    current_price: calculatedTotal,
+    maximum_accepted_price: calculatedTotal,
+    terms_version: offerVersion.terms_version,
     allow_improved_offer_auto_apply: formData.get("allow_auto_apply") === "on",
     status: "accepted",
     acceptance_snapshot: {
-      product_or_service: value(formData, "product_or_service"),
-      total_price: numberValue(formData, "current_price"),
-      seller_terms: value(formData, "terms_version"),
+      product_or_service: offerVersion.product_or_service,
+      total_price: calculatedTotal,
+      seller_terms: offerVersion.terms_version,
       data_sharing_consent_version: "data-sharing-v1",
       fulfillment: {
         fulfillment_start_type: offerVersion.fulfillment_start_type,
@@ -408,9 +465,12 @@ export async function acceptOfferAction(formData: FormData) {
         delivery_days_max: offerVersion.delivery_days_max,
         fulfillment_note: offerVersion.fulfillment_note
       },
-      legal_note: "JOUKKO on alusta. Myyjä vastaa kaupasta ja ehdoista."
+      legal_note: "Testissä ainoastaan ehdollinen kiinnostus. Kauppasopimus vaatii erillisen, nimenomaisen hyväksynnän tunnistetulle myyjälle. JOUKKO vastaa omista lakisääteisistä alustavelvoitteistaan."
     }
   }, { onConflict: "offer_version_id,profile_id" });
+
+
+  if (acceptanceError) redirect(`/joukot/${groupId}?virhe=kiinnostuksen_tallennus`);
 
   revalidatePath(`/joukot/${groupId}`);
   redirect(`/minun?hyvaksytty=1`);
@@ -420,6 +480,70 @@ export async function approveGroupAction(formData: FormData) {
   const { supabase } = await currentAdmin();
   await supabase.from("groups").update({ status: "active" }).eq("id", value(formData, "group_id"));
   revalidatePath("/admin");
+}
+
+/**
+ * Admin-only staging actions. The seller's actual completed contract and
+ * non-personal proof reference are checked before recording any commission.
+ * A completed deal is NOT proof that invoicing is already legal or due.
+ */
+export async function recordVerifiedSaleAction(formData: FormData) {
+  const { supabase } = await currentAdmin();
+  const dealId = value(formData, "deal_id");
+  const reference = value(formData, "sale_reference");
+  const netAmount = numberValue(formData, "verified_net_sale_amount", 0);
+  if (formData.get("verified_seller_evidence") !== "on"
+      || formData.get("checked_refunds") !== "on"
+      || !/^[A-Za-z0-9._/-]{5,64}$/.test(reference)
+      || !Number.isFinite(netAmount) || netAmount <= 0) {
+    redirect("/admin?virhe=kaupan_varmennus");
+  }
+
+  const { data: deal } = await supabase.from("deals")
+    .select("id, status, accepted_total_price")
+    .eq("id", dealId)
+    .single();
+  if (!deal || !["contact_shared", "order_confirmed", "fulfillment_pending", "fulfillment_in_progress"].includes(deal.status)
+      || (deal.accepted_total_price != null && netAmount > Number(deal.accepted_total_price))) {
+    redirect("/admin?virhe=kaupan_hinta_tai_tila");
+  }
+
+  const { data: updated, error } = await supabase.from("deals").update({
+    verified_net_sale_amount: netAmount,
+    merchant_verified_at: new Date().toISOString(),
+    merchant_sale_reference: reference,
+    status: "completed"
+  })
+    .eq("id", dealId)
+    .in("status", ["contact_shared", "order_confirmed", "fulfillment_pending", "fulfillment_in_progress"])
+    .select("id")
+    .single();
+  if (error || !updated) redirect("/admin?virhe=kaupan_tallennus");
+  revalidatePath("/admin");
+}
+
+export async function updateGroupCommissionAction(formData: FormData) {
+  const { supabase } = await currentAdmin();
+  const groupId = value(formData, "group_id");
+  const model = value(formData, "commission_model");
+  const rate = numberValue(formData, "commission_value", -1);
+  const allowedModels = ["percentage_of_trade", "cpa_per_completed_customer", "per_completed_customer"];
+  if (!allowedModels.includes(model) || !Number.isFinite(rate) || rate <= 0
+    || (model === "percentage_of_trade" && rate > 10)
+    || (model !== "percentage_of_trade" && rate > 10000)) {
+    redirect("/admin?virhe=epakelpo_palkkio");
+  }
+  // Existing offer versions retain the original accepted fee. Overrides apply
+  // to new offers only; any negotiated exceptions require explicit approval.
+  const version = `joukko-success-v2-draft-${Date.now().toString(36)}`;
+  const { error } = await supabase.from("groups").update({
+    commission_model_override: model,
+    commission_value_override: rate,
+    commission_terms_version_override: version
+  }).eq("id", groupId);
+  if (error) redirect("/admin?virhe=palkkion_tallennus");
+  revalidatePath("/admin");
+  revalidatePath("/yritys");
 }
 
 export async function selectWinningOfferAction(formData: FormData) {

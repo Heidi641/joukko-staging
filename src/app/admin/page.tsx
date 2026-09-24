@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { approveCompanyAction, approveGroupAction, selectWinningOfferAction } from "@/lib/actions";
+import { approveCompanyAction, approveGroupAction, selectWinningOfferAction, recordVerifiedSaleAction, updateGroupCommissionAction } from "@/lib/actions";
 import { getAiSettings, aiIsUsable } from "@/lib/ai/settings";
 import { getCategories, getGroups } from "@/lib/data";
 import { createSupabaseServerClient } from "@/lib/supabase";
@@ -21,6 +21,11 @@ export default async function AdminPage() {
     supabase.from("companies").select("id, name, business_id, verification_status, admin_review_status").neq("admin_review_status", "approved").limit(20),
     supabase.from("offers").select("id, group_id, status, companies(name), offer_versions(title, total_price)").in("status", ["active", "published"]).limit(50)
   ]) : [{ data: [] }, { data: [] }];
+  const { data: verifyDeals } = supabase ? await supabase
+    .from("deals")
+    .select("id, status, accepted_total_price")
+    .in("status", ["contact_shared", "order_confirmed", "fulfillment_pending", "fulfillment_in_progress"])
+    .limit(20) : { data: [] };
   const [{ count: profileCount }, { count: companyCount }, { count: auditCount }, { count: dealCount }, { count: commissionCount }, { count: exceptionCount }] = supabase ? await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
     supabase.from("companies").select("id", { count: "exact", head: true }),
@@ -79,7 +84,32 @@ export default async function AdminPage() {
           </article>;
         })}
       </section>
-      <section className="section-head"><h2>Joukkojen moderointi</h2></section>
+      <section className="section-head"><h2>Myyjän kaupan todentaminen – vain testissä</h2></section>
+      <section className="notice">
+        Myyjän todellinen myyntisopimus ja veroton sopimusarvo pitää tarkistaa erikseen.
+        Pelkkä ostajan kiinnostus tai valittu voittajatarjous ei synnytä provisiota.
+        Varmista kaupan toteutuminen sekä palautus- ja peruuttamistilanne ennen vahvistamista.
+        Älä lisää asiakasnimiä, maksukorttitietoja tai henkilötunnuksia viitekenttään.
+      </section>
+      <section className="grid">
+        {verifyDeals?.map((deal) => (
+          <form className="card" action={recordVerifiedSaleAction} key={deal.id}>
+            <h3>Kauppa {deal.id.slice(0, 8)}</h3>
+            <p className="muted">{deal.status} · ilmoitettu asiakashinta {Number(deal.accepted_total_price ?? 0).toLocaleString("fi-FI")} €</p>
+            <input type="hidden" name="deal_id" value={deal.id} />
+            <label>Myyjän todistettu veroton myyntiarvo (€)
+              <input name="verified_net_sale_amount" type="number" min="0.01" step="0.01" required />
+            </label>
+            <label>Tosite-/sopimusviite ilman henkilötietoja
+              <input name="sale_reference" minLength={5} maxLength={64} pattern="[A-Za-z0-9./_-]+" required />
+            </label>
+            <label className="check"><input type="checkbox" name="verified_seller_evidence" required /> Olen tarkistanut myyjän toteutuneen kaupan todisteen.</label>
+            <label className="check"><input type="checkbox" name="checked_refunds" required /> Olen tarkistanut, ettei kauppa ole keskeneräinen, peruttu tai hyvityksen alainen.</label>
+            <button className="button" type="submit">Varmenna ja merkitse toteutuneeksi</button>
+          </form>
+        ))}
+      </section>
+      <section className="section-head"><h2>Joukkojen moderointi ja erilliset palkkiot</h2></section>
       <section className="grid">
         {groups.map((group) => (
           <article className="card" key={group.id}>
@@ -94,6 +124,23 @@ export default async function AdminPage() {
               <button className="button secondary" type="button">Piilota</button>
               <button className="button secondary" type="button">Nosta etusivulle</button>
             </div>
+            <form action={updateGroupCommissionAction} className="wizard compact">
+              <input type="hidden" name="group_id" value={group.id} />
+              <h4>Juuri tämän Joukon sopimuskohtainen yrityspalkkio</h4>
+              <p className="muted">Koskee vain uusia tarjouksia. Vanhat hyväksytyt tarjousversiot säilyttävät ehtonsa.</p>
+              <label>Palkkiomalli
+                <select name="commission_model" defaultValue={group.commission_model_override ?? "percentage_of_trade"}>
+                  <option value="percentage_of_trade">Prosentti verottomasta toteutuneesta kaupasta</option>
+                  <option value="cpa_per_completed_customer">€ / varmennettu sopimus tai kauppa</option>
+                </select>
+              </label>
+              <label>Prosentti tai eurot
+                <input name="commission_value" type="number" min="0.001" max="10000" step="0.001" defaultValue={group.commission_value_override ?? ""} required />
+              </label>
+              <p className="muted">Esim. auto 1 %, talopaketti 0,75 %, uusi liittymä 25 €.
+              Varmista laskentapohja ja yrityksen hyväksyntä ennen oikeaa tarjousta.</p>
+              <button className="button secondary" type="submit">Tallenna tulevien tarjousten palkkio</button>
+            </form>
           </article>
         ))}
       </section>

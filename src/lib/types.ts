@@ -60,6 +60,9 @@ export type Group = {
   locale: "fi-FI";
   timezone: "Europe/Helsinki";
   next_tier_label?: string;
+  commission_model_override?: Offer["commission_type"] | null;
+  commission_value_override?: number | null;
+  commission_terms_version_override?: string | null;
   created_at: string;
 };
 

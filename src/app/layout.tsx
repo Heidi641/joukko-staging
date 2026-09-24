@@ -53,6 +53,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <footer className="footer">
           <Link href="/kayttoehdot">Käyttöehdot</Link>
           <Link href="/yritysehdot">Yritysehdot</Link>
+          <Link href="/vastuut">Kuka vastaa?</Link>
           <Link href="/tietosuoja">Tietosuoja</Link>
           <Link href="/tekoaly">Tekoälyn käyttö</Link>
           <Link href="/evasteet">Evästeet</Link>

@@ -34,9 +34,15 @@ export default function CampaignsPage() {
         <h2>Selkeä toimintatapa</h2>
         <p><strong>Asiakkaalle maksuton.</strong> Kiinnostus ei ole ostositoumus. Yritykset tekevät tarjoukset ja ilmoittavat kokonaishinnat. Asiakas hyväksyy tarjouksen erikseen ja tekee lopullisen sopimuksen myyjän kanssa.</p>
         <p>JOUKON tulot: yritys maksaa vain toteutuneesta ja vahvistetusta kaupasta etukäteen sovitun palkkion. Palkkio ei tule asiakkaalle erillisenä lisämaksuna. Alla on valmisteltu ehdotushinnasto; se ei ole vielä hyväksytty yrityssopimus.</p>
-        <p>Normaali kampanjarytmi: kiinnostuksen keruu 7–21 päivää tuotteen mukaan, yritysten tarjoukset 7 päivää, asiakkaan oma hyväksyntäikkuna vähintään 72 tuntia. Suurissa hankinnoissa pidempi aika.</p>
+        <p>Normaali kampanjarytmi: kiinnostuksen keruu 7–21 päivää, isot hankinnat 30–60 päivää, yritysten tarjoukset 7–14 päivää ja asiakkaan oma hyväksyntä vähintään 72 tunnin aikana; autoissa ja talopaketeissa vähintään 7 päivää.</p>
       </section>
-      {phases.map(phase => (
+      <section className="panel">
+        <h2>Isot ja pienet kaupat – palkkio suhteutetaan kauppaan</h2>
+        <p>Ei yleistä 300 euron ylärajaa. Esimerkkejä ehdotetusta yrityshinnoittelusta: 800 €:n verottomasta puhelimesta 3 % eli 24 €, 40 000 €:n verottomasta autosta 1 % eli 400 € ja 240 000 €:n verottomasta rajatusta talopakettitoimituksesta 0,75 % eli 1 800 €. Provisiolaskuun lisätään soveltuva arvonlisävero.</p>
+        <p>Nämä ovat esimerkkilaskelmia, eivät lupauksia myyntimääristä tai yritysten hyväksymiä sopimuksia. Kukin yritys hyväksyy nimenomaisesti kampanjakohtaisen palkkion ennen osallistumista.</p>
+        <p><Link href="/vastuut">Katso selkeä vastuunjako, kaupan syntymisen ehdot ja rahaliikenne</Link>.</p>
+      </section>
+            {phases.map(phase => (
         <section key={phase}>
           <div className="section-head"><h2>{phaseLabel[phase]}</h2></div>
           <div className="grid">
@@ -49,7 +55,7 @@ export default function CampaignsPage() {
                 <ul>{pilot.specification.map(item => <li key={item}>{item}</li>)}</ul>
                 <h4>Millä yritykset vertaillaan?</h4>
                 <ul>{pilot.compare.map(item => <li key={item}>{item}</li>)}</ul>
-                <p><strong>Ehdotettu alustapalkkio:</strong> {pilot.fee}</p>
+                <p><strong>Ehdotettu yrityksen maksettava palkkio:</strong> {pilot.fee}</p>
                 {pilot.note && <p className="warning">{pilot.note}</p>}
                 <div className="actions">
                   <Link className="button secondary" href={`/perusta?nimi=${encodeURIComponent(pilot.name)}`}>Ehdota / aloita Joukko</Link>

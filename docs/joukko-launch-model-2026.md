@@ -1,43 +1,62 @@
-# JOUKKO – ehdotus hallituksi pilottijulkaisuksi (24.9.2026)
+# JOUKKO – hinnoittelu, rajatut vastuut ja kilpailutuksen vakioehdot
+Päivitetty 24.9.2026. **LUONNOS: Ei live-sopimus eikä juridisesti tarkastettu.** 
+Koskee JOUKON mallia, jossa myyjä myy omissa nimissään suoraan ostajalle; kaikki ostajan kauppahinnat kulkevat myyjälle, eivät JOUKOLLE. Testidataa ei saa käyttää markkinoinnissa.
 
-**Tila:** toteutus- ja yritysneuvotteluehdotus, ei juridisesti hyväksytty kaupallinen hinnasto eikä julkaisuvaltuutus. Kaikki oikeat maksut pois päältä.
+## 1. Ansaintaperiaate
+Ostaja: 0 € JOUKON palvelusta. Myyjä päättää tarjoushinnan, näkee **ennen tarjouksen julkaisemista** JOUKON oman palkkion prosentteineen, laskentapohjineen ja ehdon versionumeroineen ja hyväksyy sen. Ei automaattista 300 €:n kattoa eikä kaikille kaupoille yhteistä provisioprosenttia.
 
-## Kohderyhmä ja järjestys
-- Vaihe 1: talvirenkaat (ajankohtainen sesonki), ilmalämpöpumppu + asennus (riittävän korkea ostos), rajaton puhelinliittymä (toistuva vertailtava tarve). Aloita näihin liittyvä yrityshankinta rinnakkain.
-- Vaihe 2: kotilaajakaista, tarkka paikallinen ruokakassi (testaa yhdellä ruokakaupalla ja kotiinkuljetuksen ehdot), sähköenergian kiinnostuskysely (ei sitovia sopimuksia ennen oikeudellista tarkistusta).
-- Kumppanihaku: uusi saman mallin auto ja rajatulla toimitusasteella talopaketti. Näitä ei pidä avata sitoviksi tilauksiksi ennen myyjien, asiakaskohtaisten tarjousten ja vastuiden varmistusta.
-- Vakuutusten jakelu ja varsinaiset matkapaketit jätetään pois ensijulkaisusta: rekisteröinti-/vastuusääntely tarkistettava erikseen.
+| Hankinta / tarkka suorite | Ehdotettava JOUKKO-palkkio yritykselle | Havainnollistava laskenta |
+|---|---|---|
+| Renkaat sekä muut tavanomaiset tuotteet | 4 % lopullisen **verottoman** kaupan myyntihinnasta | 500 € veroton myynti -> 20 € |
+| Tarkka älypuhelinlaite | 3 % verottomasta laitekaupasta | 800 € -> 24 € |
+| Ilmalämpöpumppu + määritelty asennus | 3 % verottomasta toteutuneesta paketista | 2 500 € -> 75 € |
+| Uusi matkapuhelinliittymä | 25 € / toteutunut, aktivoitu uusi liittymä | 100 liittymää -> 2 500 € |
+| Uusi kodin laajakaista | 35 € / toteutunut, aktivoitu uusi sopimus | 100 -> 3 500 € |
+| Tarkasti määritelty ruokakassi | 1 € / toimitettu vähintään 50 €:n tilaus; kaupan erillinen hyväksyntä | 100 -> 100 € |
+| Uusi auto (osto, ei leasing/rahoitus) | **1 %** toteutuneesta verottomasta autokaupasta, ei automaattista kattoa | 40 000 € -> 400 €, 100 autoa -> 40 000 € |
+| Talopaketti samalla toimitusasteella | **0,75 %** toteutuneen, allekirjoitetun talopaketin verottomasta rajatusta sopimusarvosta, **ei kattoa** | 240 000 € -> 1 800 €, 100 talopakettia -> 180 000 € |
+| Sähköenergian sopimus | Ehdollinen 30 €/aktivoitu sopimus vain sopimuskumppanin ja juridisen roolin tarkistuksen jälkeen | Ei säänneltyä kauppaa pilotissa |
 
-## Yksi ansaintaperiaate, selkeät näkyvät tuotekohtaiset hinnat
-Kuluttaja: 0 € käyttö- tai osallistumismaksua. Myyjä vastaa tavarasta/palvelusta ja asiakas maksaa myyjälle, ei JOUKOLLE. JOUKOLLE tuloutetaan **vain toteutuneesta ja peruutusajan jälkeen vahvistetusta kaupasta** etukäteen hyväksytty palkkio. Jos kauppa purkautuu, palkkiota ei synny / aiempi palkkio hyvitetään. Yrityksen sopimukseen kirjataan mahdolliset vero- ja maksutapakulut; palkkiohinnoissa ei piilokuluja.
+Nämä ovat **hinnoitteluehdotuksia**, eivät hyväksyttyjä yrityssopimuksia, ennusteita, tarjouksia tai todellista liikevaihtoa. Suurissa sopimuksissa neuvotteluvara on ilmoitettava ennen kampanjan avausta eikä hintaa muuteta takautuvasti. JOUKON laskuun lisätään soveltuva arvonlisävero (provisioprosentti lasketaan sovitusta verottomasta summasta). Verohallinnon ohje: https://vero.fi/syventavat-vero-ohjeet/ohje-hakusivu/152899/komissiokaupan-ja-valitystoiminnan-arvonlisaverotus4/
 
-- Fyysiset tavarat ja asennukset: ehdotus 3 % myyjän alvittomasta toteutuneesta myyntihinnasta, min. 5 €/kauppa, katto 300 €/kauppa.
-- Liittymät / laajakaista: ehdotus 20 €/vahvistettu sopimus, kerran.
-- Paikallinen ruokakassi: pilottiehdotus 1 €/valmis vähintään 50 €:n tilaus; varmista kaupalle taloudellisesti järkevä malli.
-- Auto ja talopaketti: ehdotus 300 €/myyjän vahvistama toteutunut kauppa, ei pelkästä liidistä; neuvoteltava tapauskohtaisesti ennen aktivointia.
-- Sähkö: vain kysynnän kartoitus; provisiomalli ja välitysrooli tarkistettava ennen tarjousten keruuta.
-- Ei pakollista yrityskuukausimaksua ensimmäisessä pilotissa. Myöhemmin mahdollinen lisäpalvelujäsenyys erillisellä hinnalla ja ilman kaksoisveloitusta.
+**Talopaketin laskentapohja ei saa olla epämääräinen:** vain allekirjoitettuun toimittajan pakettisopimukseen sisältyvä sovittu toimitussisältö, ilman erillistä tonttia, ulkopuolista maanrakennusurakkaa, rakennuslainaa ja muuta sopimukseen kuulumatonta. Sopimusmuutos kesken toimituksen: erillinen etukäteen sovittu käsittely ja uusi vahvistus.
 
-## Aikarajat ja tilakone
-1. `interest_open`: 7–21 vrk (auto 30, talo 60); "Minä myös" ei sido, määräaikaiset sopimukset odottavat vaihtokelpoisuutta.
-2. `offers_open`: yrityksillä 7 vrk ja mahdollisuus tarjota jo kiinnostusvaiheessa; selkeä vahvistus tarjouksen kokonaishinnalle ja ehdoille.
-3. `selection`: tarjoukset näkyvät rinnakkain, hintaportaiden ehdot, alustan palkkio yritykselle ja vastuut selvästi esillä.
-4. `customer_acceptance`: vähintään 72 h viimeiselle kuluttajan omalle hyväksynnälle; ei hiljaisia sitoumuksia tai automaattisia sopimusvaihtoja.
-5. `fulfillment` -> `verified_completed` -> `billable`: myyjän vahvistama toteutus + kuluttajan käytettävissä olevat lakisääteiset oikeudet huomioitu.
-6. Jos kiinnostus-/tarjouskynnys ei täyty: erääntyminen; näkyvästi jatko enintään kerran 14 vrk tai sulje ja säilytä ostotoive ilman asiakkaan sitomista.
-7. Yrityksen tarjous: varastoraja, hinnan voimassaolo, toimitusaika ja muutosten hyväksyntä ilmoitettava. Materiaaliset muutokset vaativat asiakkaan uuden hyväksynnän.
+## 2. Milloin JOUKKO voi laskuttaa
+1. Kiinnostus, Joukkoon liittyminen, tarjoukset, klikit ja hylätyt kaupat eivät maksa myyjälle eivätkä kuluttajalle.
+2. Myyjän on vahvistettava toteutunut toimitus-/sopimustapahtuma asianmukaisella tunnisteella, veroton todellinen laskentapohja ja tarvittaessa maksun saaminen. Laskutuksen ajankohta määritellään sopimuksessa; huomioi palautus- ja peruutusajat sekä lakisääteiset poikkeukset.
+3. JOUKON ylläpitäjä tarkistaa myyjän ilmoituksen sovitusti. Kiistanalaiset, perutut, palautetut ja petolliset kaupat jäädytetään; hyvitys vaikuttaa myös provisioon.
+4. Samasta kauppatapahtumasta saa syntyä enintään yksi provisio (idempotenssi). Yksi kampanja ei oikeuta provisioon myyjän muista kaupoista.
+5. Sopimus- ja provisioehdon versio lukitaan jokaiselle julkaistulle tarjoukselle. Olemassa olevien hyväksyntöjen hintaa ja provisiota ei saa muuttaa takautuvasti.
+6. Perintä laskulla yritykseltä; ei kuluttajan maksujen vastaanottoa, suoraa huomiotonta Stripe-pidätystä eikä automaattista kiinnitystä asiakkaan luottoon.
 
-## Ehdoton julkaisun tarkastus
-- Stagingissa on tekaistuja E2E-yrityksiä, osallistujia ja tarjouksia. Niitä EI SAA näkyä oikean palvelun mittareissa, suosituksissa tai tarjouksina. Tuotantokantaan vain 0-aloitusryhmiä.
-- Omat tuotekohtaiset minimiehdot ja kokonaiskustannusten vertailu (sopimuksissa 12 kk kokonaishinta), ei pelkkiä prosenttialennuksia.
-- Vain varmennettu yritys saa lähettää oikeita tarjouksia; Y-tunnus, maksutiedot ja asiakaspalvelukontakti tarkistetaan.
-- Oikeat yrityssopimukset, laskutuskäytäntö ja tietosuoja tarkistetaan. Stripe / Connect vasta erillisen testin ja hyväksynnän jälkeen, ettei raha liiku vahingossa.
-- Ilmalämpöpumpun, talopakettien, sähkön, sähköisten viestintäpalveluiden ja muiden erityisalojen ehdot tarkastettava asiantuntijalla ennen sitovaa transaktiota.
-- Tietoturva / RLS / testit desktop ja mobiili / lähetysten ja maksujen idempotenssi / käyttöönoton paluutie dokumentoitava.
+## 3. Kuka vastaa mistä? (juristin tarkistettava)
+- **Myyjäyritys**, joka käy selvästi ilmi ennen tilaamista, on kauppasopimuksen osapuoli. Se määrittelee hinnan, oman tarjouksensa ehdot, toimituksen, asennuksen ja työn tekijät, luvat ja turvallisuuden, takuut, lakisääteisen virhevastuun, peruuttamisoikeudet ja asiakasreklamaatiot. Myyjä maksaa JOUKON laskun erillisestä palvelusopimuksesta.
+- **Ostaja** antaa kiinnostuksen ensin ei-sitovasti ja tekee lopullisen sopimuksen itse nimenomaisesti myyjän kanssa omine tunnistetietoineen. Määräaikaisia sopimuksia ei vaihdeta automaattisesti.
+- **JOUKKO / alustaa ylläpitävä Oy** tarjoaa kysyntä-, esittely-, vertailu- ja yhteydenvälityspalvelun omissa nimissään. Sen omat tekniset virheet, harhaanjohtava sisältö, tietosuojavelvoitteet sekä mahdolliset markkinapaikka- ja välittäjävelvoitteet eivät katoa vastuuvapauslausekkeella. Täsmällinen KSL 12:1 -tilanne ja DSA-soveltuminen tarkistetaan juristilla.
+- **Omistaja henkilökohtaisesti** ei ole ostajien sopimuskumppani, jos kaikki sopimukset tehdään asianmukaisesti Oy:n nimissä ja laskuun. Tämä ei silti vapauta hallituksen lakisääteisistä velvoitteista, omasta väärinkäytöksestä tai mahdollisista henkilökohtaisista takauksista.
+- **Vakuutukset, kiinteistönvälitys, luotonvälitys, sitovat matkapaketit ja muut säännellyt palvelut** pidetään pois varsinaisesta kaupankäynnistä, kunnes lupatarpeet on selvitetty. Myös sähkössä ja verkkoliittymissä tarkistetaan sopimustyyppikohtaiset markkinointi- ja edustusoikeudet.
 
-## Suomen ohjeita
-- Tilastokeskuksen vuoden 2025 hyödykepainot: https://stat.fi/fi/julkaisu/cm190981h81o006ukn7pr0w19
-- KKV markkinapaikan vastuun selkeys: https://www.kkv.fi/kuluttaja-asiat/verkkokauppa/verkon-markkinapaikka-alustat/
-- KKV kokonaishintatiedot: https://www.kkv.fi/kuluttaja-asiat/markkinointi-alennukset-ja-hinnan-ilmoittaminen/hinnan-ilmoittaminen/
-- Energiaviraston sähkön vertailu: https://www.sahkonhinta.fi/faq
-- Finlex vakuutusten tarjoamisen rekisteröinti: https://finlex.fi/fi/lainsaadanto/2018/234
+Lähteitä oikeudelliseen tarkistukseen:
+- https://www.kkv.fi/kuluttaja-asiat/verkkokauppa/verkon-markkinapaikka-alustat/
+- https://www.kkv.fi/kuluttaja-asiat/tavarat/kuka-vastaa-virheesta/
+- https://www.traficom.fi/fi/datatalous-ja-datan-valittaminen/verkkoalustan-velvollisuudet
+- https://www.kkv.fi/kuluttaja-asiat/tietoa-ja-ohjeita-yrityksille/kuluttaja-asiamiehen-linjaukset/sopimusehtojen-laatiminen/
+
+## 4. Pakettikohtaiset rajaukset
+- **Auto:** sama merkki, malli, vuosimalli, voimalinja ja varustetaso. Väri ja toimituspaikka valitaan erikseen. Rahoitus, leasing, vaihtoauton hyvitys, vakuutukset ja ajoneuvoverot esitetään erillisinä; myyjä vahvistaa kokonaishinnan.
+- **Älypuhelinlaite:** tarkka malli, mallikoodi, muisti, kunto ja toimitus. Liittymä ja rahoitus eivät kuulu laitteeseen, ellei niille perusteta omaa vertailua.
+- **Talopaketti:** toimitusaste ja tehtäväluettelo, perustukset, LVIS, märkätilat ja loppusiivous on joko sisällytettävä tai merkittävä poissuljetuiksi. Tonttikohtaisen maaperän aiheuttamat lisäkulut määritellään ostajan ja myyjän välisessä kohdesopimuksessa.
+- **Liittymät:** enimmäisnopeus, data, EU-alue, hinta ensimmäiselle 12 kuukaudelle ja sen jälkeen, avausmaksu ja sopimuskausi, aluekohtainen kuuluvuus ja myyjän valtuutus.
+- **Sähkö:** kiinteä, pörssi ja hybridi vertaillaan eri ryhminä; ilmoitetaan energia snt/kWh, kuukausimaksu, kulutusarvio ja määräaikaisuus; sähkönsiirtoa ei kilpailuteta.
+- **Ruokakassi:** kiinteä täsmällinen ostoslista, määrä ja paino, sallittujen korvausten säännöt ja noudon/toimituksen hinta.
+
+**Kiinnostusjakso:** ruoka 7 vrk, tavarat 14 vrk, liittymät ja asennukset 21 vrk, auto 30 vrk, talopaketti 60 vrk. Myyjä voi tehdä ehdotuksia heti, mutta tarjousten lopullinen jättöikkuna 7 vrk (isot hankinnat 14 vrk). Ostajan vahvistusikkuna vähintään 72 h, autoissa ja taloissa vähintään 7 vrk tai enemmän tarpeen mukaan. Kampanja joko suljetaan tai jatketaan erillisellä näkyvällä päätöksellä, ei automaattista sitoutumista.
+
+## 5. Julkaisun ehdottomat portit
+- Testissä on keinotekoisia osallistujia, yrityksiä ja tarjouksia. **Nollaa tai eristä ne julkisesta tuotantodatasta**. Suosio ja säästöt oikeista todistettavista luvuista.
+- Alustan oikea nimi, Y-tunnus, osoite, yhteystiedot ja tietosuoja-asiakirjat julkaistu; myyjän oikeat tunnisteet ja yhteystiedot nähtävillä ennen sopimusta.
+- Myyjän ja kuluttajan ehdot, vastuunjako, provisio, toimitus ja soveltuva peruuttamisprosessi juristin läpi.
+- Puhelin-/verkkomarkkinoinnin suostumukset, markkinapaikkavelvoitteet, RLS, valvottu reklamaatio- ja laittoman sisällön ilmoituskanava valmiina.
+- Maksut pysyvät testitilassa, kunnes erilliset luotto-, vero- ja maksuprosessien testit ja hyväksyntä on tehty.
+- Backend käyttää kyseisen Joukon sopimuskohtaista fee overridea, prosenttimalli **todistetusta verottomasta** kauppasummasta, ja vaatii oikean toteutumistodisteen sekä adminin vahvistuksen.
+- Puhelinlaitteiden ja talopakettien todelliset toimittajat sitoutuvat ensin omaan kampanjasopimukseen; lupaa 100 auton / talon kauppaa ei markkinoida ennusteena.
