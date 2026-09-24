@@ -34,16 +34,7 @@ begin
          updated_at=now()
    where group_id=p_group_id and status='accepted';
 
-  insert into public.notifications(profile_id,notification_type,title,body,action_path)
-  select d.user_id,'competition_result',
-    case when d.offer_id=p_winning_offer_id then 'Joukon tarjouskilpailu päättyi'
-         else 'Toinen tarjous valittiin' end,
-    case when d.offer_id=p_winning_offer_id
-         then 'Valitun myyjän yhteydenotto voi alkaa. Tämä EI ole tilaus- tai sopimusvahvistus: tee lopullinen sopimus myyjän kanssa itse.'
-         else 'Valitsemasi tarjous ei voittanut. Sinulle ei synny tämän tarjouksen ostovelvoitetta.' end,
-    '/minun'
-  from public.deals d
-  where d.group_id=p_group_id and d.status in ('contact_shared','cancelled');
+
 end $$;
 revoke all on function public.finalize_offer_competition(uuid,uuid) from public,anon;
 grant execute on function public.finalize_offer_competition(uuid,uuid) to authenticated;
@@ -83,3 +74,46 @@ on public.data_sharing_consents for select to authenticated using (
       and c.billing_setup_status='ready'
   )
 );
+
+-- Notifications come from the existing RLS-safe trigger rather than giving
+-- ordinary admins broad direct INSERT rights to all notifications.
+create or replace function public.notify_joukko_events()
+returns trigger language plpgsql security definer set search_path=public as $$
+declare v_group_name text;
+begin
+  if tg_table_name='group_members' and tg_op='INSERT' then
+    select name into v_group_name from public.groups where id=new.group_id;
+    insert into public.notifications(profile_id,notification_type,title,body,action_path)
+    values(new.profile_id,'group_joined','Olet mukana Joukossa',
+      format('Liityit Joukkoon %s. Tämä ei ole ostositoumus.',coalesce(v_group_name,'JOUKKO')),
+      '/joukot/' || new.group_id::text);
+  elsif tg_table_name='offer_acceptances' and tg_op='INSERT' then
+    insert into public.notifications(profile_id,notification_type,title,body,action_path)
+    values(new.profile_id,'offer_interest',
+      'Ehdollinen kiinnostus tallennettu',
+      'Olet ilmoittanut kiinnostuksesi tähän tarjoukseen. Tämä EI ole tilaus- tai sopimusvahvistus.',
+      '/minun');
+  elsif tg_table_name='deals' and tg_op='UPDATE' and old.status is distinct from new.status then
+    if new.status='contact_shared' then
+      insert into public.notifications(profile_id,notification_type,title,body,action_path)
+      values(new.user_id,'winning_offer',
+        'Joukon valittu tarjous',
+        'Valitun myyjän yhteydenotto voi alkaa. Tämä EI ole tilaus: vahvista mahdollinen kauppa itse suoraan myyjälle.',
+        '/minun');
+    elsif new.status='cancelled' and old.status='accepted' then
+      insert into public.notifications(profile_id,notification_type,title,body,action_path)
+      values(new.user_id,'offer_not_selected',
+        'Valitsemaasi tarjousta ei valittu',
+        'Tästä ehdollisesta kiinnostuksesta ei syntynyt ostovelvoitetta.',
+        '/minun');
+    elsif new.status='order_confirmed' then
+      insert into public.notifications(profile_id,notification_type,title,body,action_path)
+      values(new.user_id,'seller_contract',
+        'Myyjän ilmoittama sopimus',
+        'Myyjä on ilmoittanut sopimuksesta; tarkista aina myyjän varsinainen sopimusvahvistus suoraan myyjältä.',
+        '/minun');
+    end if;
+  end if;
+  return new;
+end $$;
+revoke all on function public.notify_joukko_events() from public,anon,authenticated;
