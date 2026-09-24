@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 
 const publicNav = [
   ["Etusivu", "/"],
-  ["Joukot", "/joukot"],
+  ["Joukot", "/joukot"],\n  ["Kampanjat", "/kampanjat"],
   ["Perusta Joukko", "/perusta"],
   ["Yrityksille", "/yritys"],
   ["Kirjaudu / Rekisteröidy", "/kirjaudu"]
