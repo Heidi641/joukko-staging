@@ -503,7 +503,7 @@ export async function recordVerifiedSaleAction(formData: FormData) {
     .select("id, status, accepted_total_price")
     .eq("id", dealId)
     .single();
-  if (!deal || !["order_confirmed", "fulfillment_pending", "fulfillment_in_progress"].includes(deal.status)
+  if (!deal || !["contact_shared", "order_confirmed", "fulfillment_pending", "fulfillment_in_progress"].includes(deal.status)
       || (deal.accepted_total_price != null && netAmount > Number(deal.accepted_total_price))) {
     redirect("/admin?virhe=kaupan_hinta_tai_tila");
   }
@@ -515,7 +515,7 @@ export async function recordVerifiedSaleAction(formData: FormData) {
     status: "completed"
   })
     .eq("id", dealId)
-    .in("status", ["order_confirmed", "fulfillment_pending", "fulfillment_in_progress"])
+    .in("status", ["contact_shared", "order_confirmed", "fulfillment_pending", "fulfillment_in_progress"])
     .select("id")
     .single();
   if (error || !updated) redirect("/admin?virhe=kaupan_tallennus");
