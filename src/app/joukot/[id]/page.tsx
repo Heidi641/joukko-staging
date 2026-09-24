@@ -103,7 +103,13 @@ export default async function GroupDetailPage({ params }: { params: Promise<{ id
             <p className="muted">Tarjous päättyy {offer.valid_until ?? "ei ilmoitettu"} · toimitus alkaa {offer.fulfillment_start_type === "immediately_after_acceptance" ? "heti hyväksynnän jälkeen" : "tarjouksen päättymisen jälkeen"} · arvio {offer.delivery_days_min && offer.delivery_days_max ? `${offer.delivery_days_min}-${offer.delivery_days_max} arkipäivää` : offer.delivery_time ?? "ei ilmoitettu"}</p>
             <p className="muted">Osuvuus: {offer.requirement_match} · kategoria: {offer.category_match}</p>
             <p>{offer.terms}</p>
+            {["active", "published"].includes(offer.status ?? "active") ? (
             <OfferAcceptanceCard offer={offer} acceptedCount={group.committed_count} />
+          ) : (
+            <p className="warning">{offer.status === "fulfillment"
+              ? "Tämä tarjous valittiin jatkoon. Lopullinen kauppa tehdään erikseen myyjän kanssa."
+              : "Tarjouskilpailu on suljettu. Tämä tarjous ei ole enää avoinna."}</p>
+          )}
           </article>
         ))}
         {offers.length === 0 && (
