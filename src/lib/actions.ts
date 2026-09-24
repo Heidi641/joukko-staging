@@ -428,6 +428,70 @@ export async function approveGroupAction(formData: FormData) {
   revalidatePath("/admin");
 }
 
+/**
+ * Admin-only staging actions. The seller's actual completed contract and
+ * non-personal proof reference are checked before recording any commission.
+ * A completed deal is NOT proof that invoicing is already legal or due.
+ */
+export async function recordVerifiedSaleAction(formData: FormData) {
+  const { supabase } = await currentAdmin();
+  const dealId = value(formData, "deal_id");
+  const reference = value(formData, "sale_reference");
+  const netAmount = numberValue(formData, "verified_net_sale_amount", 0);
+  if (formData.get("verified_seller_evidence") !== "on"
+      || formData.get("checked_refunds") !== "on"
+      || !/^[A-Za-z0-9._/-]{5,64}$/.test(reference)
+      || !Number.isFinite(netAmount) || netAmount <= 0) {
+    redirect("/admin?virhe=kaupan_varmennus");
+  }
+
+  const { data: deal } = await supabase.from("deals")
+    .select("id, status, accepted_total_price")
+    .eq("id", dealId)
+    .single();
+  if (!deal || !["order_confirmed", "fulfillment_pending", "fulfillment_in_progress"].includes(deal.status)
+      || (deal.accepted_total_price != null && netAmount > Number(deal.accepted_total_price))) {
+    redirect("/admin?virhe=kaupan_hinta_tai_tila");
+  }
+
+  const { data: updated, error } = await supabase.from("deals").update({
+    verified_net_sale_amount: netAmount,
+    merchant_verified_at: new Date().toISOString(),
+    merchant_sale_reference: reference,
+    status: "completed"
+  })
+    .eq("id", dealId)
+    .in("status", ["order_confirmed", "fulfillment_pending", "fulfillment_in_progress"])
+    .select("id")
+    .single();
+  if (error || !updated) redirect("/admin?virhe=kaupan_tallennus");
+  revalidatePath("/admin");
+}
+
+export async function updateGroupCommissionAction(formData: FormData) {
+  const { supabase } = await currentAdmin();
+  const groupId = value(formData, "group_id");
+  const model = value(formData, "commission_model");
+  const rate = numberValue(formData, "commission_value", -1);
+  const allowedModels = ["percentage_of_trade", "cpa_per_completed_customer", "per_completed_customer"];
+  if (!allowedModels.includes(model) || !Number.isFinite(rate) || rate <= 0
+    || (model === "percentage_of_trade" && rate > 10)
+    || (model !== "percentage_of_trade" && rate > 10000)) {
+    redirect("/admin?virhe=epakelpo_palkkio");
+  }
+  // Existing offer versions retain the original accepted fee. Overrides apply
+  // to new offers only; any negotiated exceptions require explicit approval.
+  const version = `joukko-success-v2-draft-${Date.now().toString(36)}`;
+  const { error } = await supabase.from("groups").update({
+    commission_model_override: model,
+    commission_value_override: rate,
+    commission_terms_version_override: version
+  }).eq("id", groupId);
+  if (error) redirect("/admin?virhe=palkkion_tallennus");
+  revalidatePath("/admin");
+  revalidatePath("/yritys");
+}
+
 export async function selectWinningOfferAction(formData: FormData) {
   const { supabase } = await currentAdmin();
   const groupId = value(formData, "group_id");
