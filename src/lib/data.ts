@@ -66,7 +66,7 @@ export async function getOffersForGroup(groupId: string): Promise<Offer[]> {
     .from("offer_cards")
     .select("*")
     .eq("group_id", groupId)
-    .eq("status", "active")
+    .in("status", ["active", "published", "fulfillment", "closed_to_new"])
     .order("total_price", { ascending: true });
 
   if (error || !data) return [];
