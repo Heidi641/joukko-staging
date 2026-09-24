@@ -219,15 +219,21 @@ export async function createOfferAction(formData: FormData) {
   const groupId = value(formData, "group_id");
   const { data: group } = await supabase
     .from("groups")
-    .select("id, group_type, brand, model_code, categories!inner(id, slug, active, regulated, commission_model, commission_value, commission_terms_version)")
+    .select("id, group_type, brand, model_code, status, commission_model_override, commission_value_override, commission_terms_version_override, categories!inner(id, slug, active, regulated, commission_model, commission_value, commission_terms_version)")
     .eq("id", groupId)
     .single();
   if (!group) redirect("/yritys?virhe=joukko");
   const category = Array.isArray(group.categories) ? group.categories[0] : group.categories;
   if (!category?.active) redirect("/yritys?virhe=kategoria");
+  if (group.status !== "active") redirect("/yritys?virhe=joukko_ei_aktiivinen");
   if (isProductionRelease && category.regulated) redirect("/yritys?virhe=regulated");
+  // A campaign may have an explicitly negotiated fee that takes precedence over
+  // its broader category. Both are protected by server-side DB triggers.
+  const commissionType = group.commission_model_override ?? category.commission_model;
+  const commissionValue = group.commission_value_override ?? category.commission_value;
+  const commissionTermsVersion = group.commission_terms_version_override ?? category.commission_terms_version;
   if (formData.get("accept_commission") !== "on") redirect("/yritys?virhe=palkkio_hyvaksyttava");
-  if (!category.commission_model || category.commission_model === "manual_review_required" || category.commission_value == null) {
+  if (!commissionType || commissionType === "manual_review_required" || commissionValue == null || !commissionTermsVersion) {
     redirect("/yritys?virhe=palkkio_puuttuu");
   }
 
@@ -304,10 +310,10 @@ export async function createOfferAction(formData: FormData) {
       minimum_participants: numberValue(formData, "minimum_participants", 1),
       contract_length: value(formData, "contract_length") || null,
       vat_status: value(formData, "vat_status") || "Sisältää ALV:n",
-      commission_type: category.commission_model,
-      commission_value: category.commission_value,
+      commission_type: commissionType,
+      commission_value: commissionValue,
       commission_currency: "EUR",
-      commission_terms_version: category.commission_terms_version || "category-commission-v1",
+      commission_terms_version: commissionTermsVersion,
       commission_terms_accepted_by_company_at: new Date().toISOString(),
       terms_type: "text",
       terms_text: termsText,
@@ -334,7 +340,7 @@ export async function createOfferAction(formData: FormData) {
     .single();
 
   if (version) {
-    const tierRows = (value(formData, "tiers") || "100=599\n500=559\n1000=529")
+    const tierRows = value(formData, "tiers")
       .split(/\r?\n/)
       .map((row) => row.split(/[=→]/).map((part) => part.trim()))
       .filter(([min, tierPrice]) => Number(min) > 0 && Number(tierPrice?.replace(",", ".")) > 0)
