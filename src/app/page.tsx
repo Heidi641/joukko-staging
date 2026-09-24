@@ -41,6 +41,19 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </aside>
       </section>
 
+      <section className="grid two">
+        <article className="panel">
+          <h2>Haluan ostaa edullisemmin</h2>
+          <p>Valitse kiinnostava tuote tai palvelu. Osallistuminen ei sido ostamaan.</p>
+          <Link className="button" href="/kampanjat">Löydä oma Joukko</Link>
+        </article>
+        <article className="panel">
+          <h2>Haluan tarjota yrityksenä</h2>
+          <p>Näe ostajien kiinnostus ja tarjoa yrityksesi ehtojen mukaisesti.</p>
+          <Link className="button" href="/yritys">Tutustu yrityksenä</Link>
+        </article>
+      </section>
+
       {query && matches.length > 0 && (
         <>
           <section className="section-head">

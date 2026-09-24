@@ -18,6 +18,18 @@ export default function CampaignsPage() {
           <p>Tässä ovat valmisteltavat ostotoiveet. Nämä eivät ole oikeita tarjouksia eikä mukanaolijoita ole laskettu kuvitteellisesti.</p>
         </div>
       </section>
+      <section className="grid two">
+        <article className="panel">
+          <h2>Ostajille</h2>
+          <p>Haluatko parempaa hintaa? Valitse kiinnostava kampanja, ilmoita ostotoiveesi ja vertaile tulevia oikeita tarjouksia. Kiinnostus ei sido.</p>
+          <Link className="button" href="/perusta">Haluan ostaa</Link>
+        </article>
+        <article className="panel">
+          <h2>Yrityksille ja valtuutetuille myyjille</h2>
+          <p>Tarjoa oman yrityksesi kanssa sovitun myyntialueen ja valtuuksien mukaisesti. Jos osallistuminen edellyttää keskitettyä hyväksyntää, kumppanuus tehdään yrityksen kanssa.</p>
+          <Link className="button" href="/yritys">Haluan tarjota</Link>
+        </article>
+      </section>
       <section className="panel">
         <h2>Selkeä toimintatapa</h2>
         <p><strong>Asiakkaalle maksuton.</strong> Kiinnostus ei ole ostositoumus. Yritykset tekevät tarjoukset ja ilmoittavat kokonaishinnat. Asiakas hyväksyy tarjouksen erikseen ja tekee lopullisen sopimuksen myyjän kanssa.</p>
