@@ -227,6 +227,9 @@ export async function createOfferAction(formData: FormData) {
   if (!category?.active) redirect("/yritys?virhe=kategoria");
   if (group.status !== "active") redirect("/yritys?virhe=joukko_ei_aktiivinen");
   if (isProductionRelease && category.regulated) redirect("/yritys?virhe=regulated");
+  if (isProductionRelease && (!group.commission_model_override || group.commission_value_override == null || !group.commission_terms_version_override)) {
+    redirect("/yritys?virhe=joukon_palkkio_ei_hyvaksytty");
+  }
   // A campaign may have an explicitly negotiated fee that takes precedence over
   // its broader category. Both are protected by server-side DB triggers.
   const commissionType = group.commission_model_override ?? category.commission_model;
