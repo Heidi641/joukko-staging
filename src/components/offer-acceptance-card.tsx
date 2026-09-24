@@ -20,7 +20,7 @@ function deliveryEstimate(offer: Offer) {
 }
 
 export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; acceptedCount: number }) {
-  const currentTier = matchingTier(offer, acceptedCount) ?? offer.tiers[0] ?? null;
+  const currentTier = matchingTier(offer, acceptedCount) ?? null;
   const nextTier = offer.tiers
     .filter((tier) => tier.min_acceptances > acceptedCount)
     .sort((a, b) => a.min_acceptances - b.min_acceptances)[0] ?? null;
@@ -29,7 +29,7 @@ export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; ac
   return (
     <div className="offer-acceptance">
       <span className="pill">Tarjousversio {offer.version}</span>
-      <h3>Hyväksyt tämän tarjouksen</h3>
+      <h3>Ilmaise ehdollinen kiinnostus tähän tarjoukseen</h3>
       <dl className="summary-list">
         <div><dt>Yritys</dt><dd>{offer.company_name} · {offer.company_verification_status}</dd></div>
         <div><dt>Yritystunnus / maa</dt><dd>{offer.company_business_id ?? "Näytetään tarvittaessa hyväksynnän jälkeen"} · {offer.company_country}</dd></div>
@@ -50,25 +50,25 @@ export function OfferAcceptanceCard({ offer, acceptedCount }: { offer: Offer; ac
         <p>{offer.terms_text ?? offer.terms_url ?? offer.terms_document_reference ?? offer.terms}</p>
       </details>
       {offer.fulfillment_note && <p className="muted">{offer.fulfillment_note}</p>}
-      <p className="muted">JOUKKO toimii välittävänä markkinapaikkana ja kysynnän kokoajana. Yrityksen varsinainen sopimus tehdään myyjän ja asiakkaan välillä. JOUKON palkkiota ei peritä asiakkaalta.</p>
+      <p className="warning">Testissä tämä painike tallentaa vain ehdollisen kiinnostuksesi tarjoukseen.
+      Tämä EI ole tilaus eikä sopimus. Lopullinen kauppa ja mahdollinen maksu tehdään
+      erikseen tunnistetun myyjän kanssa vasta lainmukaisten ennakkotietojen jälkeen.</p>
+      <p className="muted">Myyjä on {offer.company_name} ja vastaa oman kauppasopimuksensa täyttämisestä,
+      toimituksesta, soveltuvasta peruuttamisesta ja virhetilanteista. JOUKKO vastaa omasta alustatoiminnastaan.
+      JOUKKO ei peri sinulta alustan onnistumispalkkiota.</p>
       <form action={acceptOfferAction}>
         <input type="hidden" name="group_id" value={offer.group_id} />
         <input type="hidden" name="offer_id" value={offer.id} />
         <input type="hidden" name="offer_version_id" value={offer.offer_version_id} />
-        <input type="hidden" name="company_id" value={offer.company_id} />
-        <input type="hidden" name="accepted_price" value={currentPrice} />
-        <input type="hidden" name="current_price" value={currentPrice} />
-        <input type="hidden" name="terms_version" value={offer.terms_version} />
-        <input type="hidden" name="product_or_service" value={offer.product_or_service} />
         <label className="check">
           <input type="checkbox" name="allow_auto_apply" defaultChecked />
-          Hyväksyn, että jos JOUKKO kasvaa ja hinta laskee samoilla tai paremmilla ehdoilla, alempi hinta voidaan soveltaa automaattisesti ilman uutta hyväksyntää.
+          Jos JOUKKO kasvaa ja hinta laskee samoilla tai paremmilla ehdoilla, alempi kiinnostushinta voidaan näyttää automaattisesti. Tämä ei tee tilausta puolestani.
         </label>
         <label className="check">
           <input type="checkbox" name="data_sharing_consent" required />
-          Hyväksyn, että kaupan toteuttamiseen tarvittavat vähimmäistiedot voidaan luovuttaa tälle yritykselle tätä tarjousta varten.
+          Sallin, että jos tämä myyjä valitaan ja teen sen kanssa lopullisen sopimuksen, kaupan valmisteluun tarvittavat vähimmäistiedot voidaan luovuttaa vain tälle valitulle yritykselle.
         </label>
-        <button className="button" type="submit">Hyväksy tarjous</button>
+        <button className="button" type="submit">Ilmaise ehdollinen kiinnostus – ei tilausta</button>
       </form>
     </div>
   );
