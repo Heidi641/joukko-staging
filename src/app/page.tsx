@@ -55,6 +55,13 @@ export default async function HomePage({ searchParams }: { searchParams: Promise
         </>
       )}
 
+      <section className="panel">
+        <p className="kicker">JOUKON avauskampanjat</p>
+        <h2>Valmiit kilpailutusideat – pienistä isoihin hankintoihin</h2>
+        <p>Renkaat, ilmalämpöpumput, liittymät, laajakaista, tarkka ruokakassi sekä auto ja talopaketti. Katso jokaisen vertailuehdot, aikaraja ja ehdotettu yrityspalkkio. Tässä ei näytetä keksittyjä tarjouksia.</p>
+        <Link className="button" href="/kampanjat">Tutustu kampanjoihin</Link>
+      </section>
+
       {!query && (
         <>
           <section className="section-head">
