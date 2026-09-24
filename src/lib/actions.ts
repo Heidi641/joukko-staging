@@ -273,6 +273,18 @@ export async function createOfferAction(formData: FormData) {
 
   if (error || !offer) redirect("/yritys?virhe=tarjous");
 
+  // Require a concrete, buyer-readable comparison package for every new offer,
+  // irrespective of its category. Specialized category fields remain optional
+  // until the exact pilot SKU has been approved by an administrator.
+  const packageSpec = value(formData, "package_specification");
+  const includedScope = value(formData, "scope_included");
+  const excludedScope = value(formData, "scope_excluded");
+  const comparisonBasis = value(formData, "comparison_basis");
+  if (!packageSpec || !includedScope || !excludedScope || !comparisonBasis
+    || !value(formData, "terms_text")) {
+    redirect("/yritys?virhe=paketti_tai_ehdot_puuttuvat");
+  }
+
   const price = numberValue(formData, "price");
   const fees = numberValue(formData, "mandatory_fees");
   const delivery = numberValue(formData, "delivery_price");
@@ -285,7 +297,13 @@ export async function createOfferAction(formData: FormData) {
       version: 1,
       product_or_service: value(formData, "product_or_service"),
       title: value(formData, "title"),
-      description: value(formData, "description"),
+      description: [
+        value(formData, "description"),
+        `Täsmällinen kilpailutuspaketti: ${packageSpec}`,
+        `Hintaan sisältyy: ${includedScope}`,
+        `Rajaukset / ei sisälly: ${excludedScope}`,
+        `Vertailuperuste: ${comparisonBasis}`
+      ].filter(Boolean).join("\n"),
       brand: value(formData, "brand") || null,
       model: value(formData, "model") || null,
       model_code: value(formData, "model_code") || null,
@@ -325,11 +343,16 @@ export async function createOfferAction(formData: FormData) {
       published_at: new Date().toISOString(),
       requirement_match: value(formData, "requirement_match") || "company_confirmed",
       category_match: value(formData, "category_match") || "company_confirmed",
-      comparison_fields: Object.fromEntries(
+      comparison_fields: {
+        package_specification: packageSpec,
+        scope_included: includedScope,
+        scope_excluded: excludedScope,
+        comparison_basis: comparisonBasis,
+        ...Object.fromEntries(
         [...formData.entries()]
           .filter(([key, entry]) => key.startsWith("comparison_") && String(entry).trim().length > 0)
-          .map(([key, entry]) => [key.slice("comparison_".length), String(entry).trim()])
-      ),
+          .map(([key, entry]) => [key.slice("comparison_".length), String(entry).trim()]))
+      },
       public_company_name: company.name,
       public_company_business_id: company.business_id,
       public_company_contact: company.customer_service_contact || company.contact_email || company.email,
