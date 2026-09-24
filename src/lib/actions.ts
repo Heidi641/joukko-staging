@@ -392,13 +392,22 @@ export async function acceptOfferAction(formData: FormData) {
 
   const { data: offerVersion } = await supabase
     .from("offer_versions")
-    .select("id, offer_id, valid_until, max_acceptances, stock_limit, unlimited_until_close, fulfillment_start_type, fulfillment_start_date, fulfillment_end_date, delivery_days_min, delivery_days_max, fulfillment_note, terms_version, offers!inner(status)")
+    .select("id, offer_id, product_or_service, price, mandatory_fees, delivery_price, total_price, minimum_participants, valid_until, max_acceptances, stock_limit, unlimited_until_close, fulfillment_start_type, fulfillment_start_date, fulfillment_end_date, delivery_days_min, delivery_days_max, fulfillment_note, terms_version, offers!inner(id, status, group_id, company_id)")
     .eq("id", offerVersionId)
     .single();
 
-  const joinedOffer = offerVersion?.offers as { status?: string } | { status?: string }[] | undefined;
-  const offerStatus = Array.isArray(joinedOffer) ? joinedOffer[0]?.status : joinedOffer?.status;
-  if (!offerVersion || !["active", "published"].includes(String(offerStatus))) redirect(`/joukot/${groupId}?virhe=tarjous_suljettu`);
+  const joinedOffer = offerVersion?.offers as { id?: string; status?: string; group_id?: string; company_id?: string } | { id?: string; status?: string; group_id?: string; company_id?: string }[] | undefined;
+  const sourceOffer = Array.isArray(joinedOffer) ? joinedOffer[0] : joinedOffer;
+  const offerStatus = sourceOffer?.status;
+  if (!offerVersion || !sourceOffer || !["active", "published"].includes(String(offerStatus))
+      || sourceOffer.id !== offerId || sourceOffer.group_id !== groupId || !sourceOffer.company_id) {
+    redirect(`/joukot/${groupId}?virhe=tarjous_suljettu`);
+  }
+  if (isProductionRelease) {
+    // Final legally binding seller checkout and end-to-end proof of compliant
+    // acceptance are not yet enabled. This is a hard release safety gate.
+    redirect(`/joukot/${groupId}?virhe=ostopolku_ei_julkaistu`);
+  }
 
   if (offerVersion.valid_until && new Date(`${offerVersion.valid_until}T23:59:59`) < new Date()) {
     await supabase.from("offers").update({ status: "closed_to_new", closed_at: new Date().toISOString() }).eq("id", offerId);
@@ -411,26 +420,42 @@ export async function acceptOfferAction(formData: FormData) {
     .eq("offer_version_id", offerVersionId)
     .in("status", ["accepted", "auto_improved", "confirmed", "completed"]);
 
+  // Price and seller identity MUST come from the verified database record.
+  // Hidden browser fields are untrusted and are never used as money/seller data.
+  const { data: eligibleTiers } = await supabase.from("offer_price_tiers")
+    .select("min_acceptances, price")
+    .eq("offer_version_id", offerVersionId)
+    .lte("min_acceptances", acceptedCount ?? 0)
+    .order("min_acceptances", { ascending: false })
+    .limit(1);
+  const tierBase = eligibleTiers?.[0] ? Number(eligibleTiers[0].price) : Number(offerVersion.price);
+  const calculatedTotal = Math.round(
+    (tierBase + Number(offerVersion.mandatory_fees ?? 0) + Number(offerVersion.delivery_price ?? 0)) * 100
+  ) / 100;
+  if (!Number.isFinite(calculatedTotal) || calculatedTotal <= 0) {
+    redirect(`/joukot/${groupId}?virhe=hinnantarkistus`);
+  }
+
   const capacity = offerVersion.unlimited_until_close ? null : (offerVersion.max_acceptances ?? offerVersion.stock_limit);
   if (capacity && (acceptedCount ?? 0) >= capacity) redirect(`/joukot/${groupId}?virhe=kapasiteetti_taynna`);
 
   if (formData.get("data_sharing_consent") !== "on") redirect(`/joukot/${groupId}?virhe=tietojenluovutus`);
 
-  await supabase.from("offer_acceptances").upsert({
+  const { error: acceptanceError } = await supabase.from("offer_acceptances").upsert({
     offer_id: offerId,
     offer_version_id: offerVersionId,
-    company_id: value(formData, "company_id"),
+    company_id: sourceOffer.company_id,
     profile_id: user.id,
-    accepted_price: numberValue(formData, "accepted_price"),
-    current_price: numberValue(formData, "current_price"),
-    maximum_accepted_price: numberValue(formData, "accepted_price"),
-    terms_version: value(formData, "terms_version"),
+    accepted_price: calculatedTotal,
+    current_price: calculatedTotal,
+    maximum_accepted_price: calculatedTotal,
+    terms_version: offerVersion.terms_version,
     allow_improved_offer_auto_apply: formData.get("allow_auto_apply") === "on",
     status: "accepted",
     acceptance_snapshot: {
-      product_or_service: value(formData, "product_or_service"),
-      total_price: numberValue(formData, "current_price"),
-      seller_terms: value(formData, "terms_version"),
+      product_or_service: offerVersion.product_or_service,
+      total_price: calculatedTotal,
+      seller_terms: offerVersion.terms_version,
       data_sharing_consent_version: "data-sharing-v1",
       fulfillment: {
         fulfillment_start_type: offerVersion.fulfillment_start_type,
@@ -440,9 +465,12 @@ export async function acceptOfferAction(formData: FormData) {
         delivery_days_max: offerVersion.delivery_days_max,
         fulfillment_note: offerVersion.fulfillment_note
       },
-      legal_note: "JOUKKO on alusta. Myyjä vastaa kaupasta ja ehdoista."
+      legal_note: "Testissä ainoastaan ehdollinen kiinnostus. Kauppasopimus vaatii erillisen, nimenomaisen hyväksynnän tunnistetulle myyjälle. JOUKKO vastaa omista lakisääteisistä alustavelvoitteistaan."
     }
   }, { onConflict: "offer_version_id,profile_id" });
+
+
+  if (acceptanceError) redirect(`/joukot/${groupId}?virhe=kiinnostuksen_tallennus`);
 
   revalidatePath(`/joukot/${groupId}`);
   redirect(`/minun?hyvaksytty=1`);
