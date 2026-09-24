@@ -24,7 +24,7 @@ export default async function AdminPage() {
   const { data: verifyDeals } = supabase ? await supabase
     .from("deals")
     .select("id, status, accepted_total_price")
-    .in("status", ["order_confirmed", "fulfillment_pending", "fulfillment_in_progress"])
+    .in("status", ["contact_shared", "order_confirmed", "fulfillment_pending", "fulfillment_in_progress"])
     .limit(20) : { data: [] };
   const [{ count: profileCount }, { count: companyCount }, { count: auditCount }, { count: dealCount }, { count: commissionCount }, { count: exceptionCount }] = supabase ? await Promise.all([
     supabase.from("profiles").select("id", { count: "exact", head: true }),
