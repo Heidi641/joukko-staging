@@ -1,5 +1,20 @@
 # JOUKKO — FINAL RELEASE -tarkastus
 
+## 24.9.2026 LISÄPORTTI – EI VIELÄ JULKAISE
+- Erota nykyisen staging-kannan testikäyttäjät, tekaistut tarjoukset ja osallistujamäärät täysin tuotannosta; älä kopioi niitä.
+- Varmista, että jokaiselle myyntiin avattavalle JOUKOLLE on ylläpitäjän asettama täsmällinen kampanjakohtainen provisio ja pakettirajaus. Provisio lasketaan todistetusta verottomasta kaupasta, ei selaimen lähettämästä summasta.
+- Autot 1 % ja talopaketit 0,75 % ovat neuvoteltavia PROPOSAALIPROSENTTEJA ilman automaattista 300 €:n kattoa, eivät sitovia yrityssopimuksia.
+- Ostajan kiinnostus ja kilpailun voittajan valinta eivät muodosta automaattista kauppaa. Myyjä tekee ostajan kanssa erillisen sopimuksen, vastaanottaa maksun ja kantaa kaupan soveltuvat velvoitteet.
+- Varmista, että hyväksyjä voi antaa ehdollisen kiinnostuksen ilman maksuvelvollisuutta, ja että vasta oikean myyjän selkeästi identifioidussa sopimuspolussa tehdään lopullinen mahdollisesti sitova ostopäätös.
+- Myyjä näkee asiakkaan tiedot vain erillisen hyväksynnän ja valitun tarjouksen jälkeen; hävinneet yritykset eivät saa samoja henkilötietoja.
+- Varmista, että myyjän sopimus-/tositeviite ja toteutunut veroton arvo ovat hallinnon tarkastamia ennen completed-tilaa tai provision kertymistä; peruutuksia tai hyvityksiä ei laskuteta.
+- Oikeudellinen arvio: KSL 12 luvun 1 §:n välittäjävastuu, verkkomarkkinapaikan DSA-velvollisuudet, GDPR, säännellyt tuotteet ja talopakettien urakkasopimukset.
+- Korvaa esimerkkimuotoiset yhteystiedot oikeilla Y-tunnus-, osoite- ja asiakaspalvelutiedoilla; laaditut käyttö- ja yritysehdot ovat vielä LUONNOKSIA.
+- Testaa desktop/mobiili, kirjautumisen molemmat roolit, todellisen myyjän vaihe, rajatut tietojen luovutukset, muutokset, peruminen, veloituksen estäminen, uuden tarjousversion lukitus ja yksi provisio per varmistettu kauppa.
+- Supabasen linterin 24.9.2026 löydökset: `public.is_admin()` SECURITY DEFINER on autentikoitujen käyttäjien kutsuttavissa (turvallisuuden tarkoitus arvioitava), Auth leaked password protection pois päältä. Ennen oikeita käyttäjiä molemmat tarkistettava.
+- Julkaisun status pysyy `LEGAL + PRIVACY + SECURITY + PAYMENT + E2E REQUIRED`. Uusi staging-koodi ei yksin ole tuotantolupa.
+
+
 JOUKKOA ei merkitä julkaisuvalmiiksi ennen kuin koko tämä tarkastus on käyty läpi.
 
 ## 1. Kirjautuminen ja näkyvyys
