@@ -56,7 +56,7 @@ export default async function CompanyPage() {
       <section className="columns">
         <form className="panel" action={createCompanyProfileAction}>
           <h2>Tarjoa yrityksenä</h2>
-          <p className="muted">Tämä luo erillisen yritysprofiilin. Käyttäjätilisi voi edelleen toimia ostajana, eikä ostajan rooli muutu myyjäksi.</p>
+          <p className="muted">Tämä luo erillisen yritysprofiilin. Käyttäjätilisi voi edelleen toimia ostajana. Oikean tarjouksen saa tehdä vain yrityksen valtuuttama myyjä oman myyntialueensa ja yrityksen sopimusten mukaisesti.</p>
           <label>Yrityksen virallinen nimi<input name="company_name" required /></label>
           <label>Y-tunnus tai yritystunniste<input name="business_id" required /></label>
           <label>Yhteyssähköposti<input name="contact_email" type="email" required /></label>
@@ -125,16 +125,32 @@ export default async function CompanyPage() {
               </details>
             ))}
           </fieldset>
+          <div className="notice">
+            <strong>Myyjän vastuu:</strong> Yritys toimii kauppasopimuksen osapuolena omissa nimissään,
+            ottaa vastaan maksun ja vastaa tuotteesta tai palvelusta, toimituksesta, asennuksesta,
+            takuusta, lakisääteisestä virhevastuusta, kuluttajan soveltuvasta peruuttamisoikeudesta
+            sekä reklamaatioista. JOUKKO vastaa omista alustavelvoitteistaan.
+          </div>
           <label>Myyjän myyntiehdot tekstinä<textarea name="terms_text" required placeholder="Yritys kirjoittaa omat ehtonsa. JOUKKO ei generoi ehtoja myyjän puolesta."></textarea></label>
           <label>Ehtoversio<input name="terms_version" placeholder="seller-terms-v1" /></label>
           <div className="notice">
-            <strong>EkoYhteisön onnistumispalkkio määräytyy valitun Joukon kategoriasta:</strong>
-            {categories.map((category) => <div key={`${category.id}-fee`}>{category.name}: {commissionLabel(category.commission_model, category.commission_value)} · ehdot {category.commission_terms_version ?? "eko-category-v1"}</div>)}
-            <p>Palkkio syntyy vain migraatiossa määritellystä toteutuneesta kaupasta. Yritys ei voi muuttaa palkkiota tarjouslomakkeella.</p>
+            <strong>Jokaisella Joukolla on etukäteen hyväksyttävä palkkio.</strong>
+            <p>Kampanjakohtainen hyväksytty palkkio ohittaa kategorian oletushinnan. Prosentit lasketaan todistetusta verottomasta kauppahinnasta – ei automaattista 300 €:n kattoa. Kiinnostus ei synnytä provisiota. Palkkio laskutetaan erikseen yritykseltä, ei kuluttajalta; soveltuva ALV lisätään laskuun.</p>
+            {groups.slice(0, 30).map((group) => {
+              const category = categories.find((item) => item.id === group.category_id);
+              const model = group.commission_model_override ?? category?.commission_model;
+              const amount = group.commission_value_override ?? category?.commission_value;
+              const version = group.commission_terms_version_override ?? category?.commission_terms_version;
+              return <div key={group.id}>
+                <strong>{group.name}:</strong> {model && amount != null ? commissionLabel(model, amount) : "Edellyttää ylläpitäjän hyväksyntää"} · ehdot {version ?? "tarkistettavana"}
+              </div>;
+            })}
+            <p>Varmista palkkio valitsemallesi JOUKOLLE ennen tarjousta. Vahvistus tallennetaan tarjouksen ehtoversioon. Hyväksyttyä versiota ei muuteta jälkikäteen.</p>
+            <p>HUOM: Tämä on edelleen testipalvelu. Tuotteiden kaupankäynnin sopimusehdot ja palkkioiden laskutus on tarkistettava ennen oikeaa käyttöönottoa.</p>
           </div>
           <label className="check"><input type="checkbox" required /> Vahvistan, että yrityksellä on oikeus tehdä tarjous ja tiedot ovat oikeita.</label>
           <label className="check"><input type="checkbox" required /> Vahvistan, että nämä ovat yrityksen omat myyntiehdot ja yritys vastaa niiden oikeellisuudesta.</label>
-          <label className="check"><input type="checkbox" name="accept_commission" required /> Hyväksyn yllä näytetyn, valitun kategorian EkoYhteisön onnistumispalkkion ja palkkioehdot tälle tarjoukselle. Palkkio veloitetaan yritykseltä, ei asiakkaalta. Live-Stripeä ei kytketä.</label>
+          <label className="check"><input type="checkbox" name="accept_commission" required /> Hyväksyn valitsemani Joukon yllä näytetyn onnistumispalkkion, laskentapohjan ja juuri tähän tarjoukseen tallennettavan ehtoversion. Palkkio veloitetaan yritykseltä, ei asiakkaalta. Live-Stripeä ei kytketä.</label>
           <button className="button" type="submit">Julkaise tarjous</button>
         </form>
 
